@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>RiNi Cloud OS</title>
 <meta name="theme-color" content="#7c3aed">
 <link rel="manifest" href="./manifest.json">
@@ -38,7 +38,21 @@ body{
     radial-gradient(circle at 90% 85%, #e6f7ff 0%, transparent 45%),
     linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
   min-height:100vh; -webkit-tap-highlight-color:transparent; overscroll-behavior:contain;
+  touch-action:manipulation; -webkit-touch-callout:none;
 }
+
+/* -------- prevent text selection / long-press callouts app-wide -------- */
+#app, .folder-card, .file-row, .nav-btn, .icon-btn, .action-item, .crumb,
+.section-label, .storage-card, .me-card, .settings-item, .chip, .type-pill,
+h1.app-title, .sheet h2, .empty-state, .folder-more, .file-more, .btn,
+.chat-msg, .search-bar, .storage-meta, .storage-sub{
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+}
+input, textarea{
+  user-select:text !important; -webkit-user-select:text !important;
+  -webkit-touch-callout:default !important;
+}
+
 #app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:96px; }
 
 .topbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:22px 20px 8px; }
@@ -53,6 +67,8 @@ h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px;
 .crumb{ font-size:13px; color:var(--ink-soft); background:var(--white-card); padding:4px 12px; border-radius:var(--radius-pill); white-space:nowrap; cursor:pointer; font-weight:500; border:none; font-family:'Fredoka'; }
 .crumb.current{ background:var(--accent); color:#fff; font-weight:600; }
 .top-actions{ display:flex; gap:10px; }
+
+#searchBarWrap.hidden, #crumbs.hidden, #btnBack.hidden{ display:none !important; }
 
 .search-bar{ margin:14px 20px 0; display:flex; align-items:center; gap:12px; background:var(--card-butter); padding:16px 20px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); color:var(--card-butter-ink); }
 .search-bar input{ border:none;background:transparent;outline:none; font-family:'Fredoka';font-size:16px;font-weight:500; color:var(--ink);width:100%; }
@@ -80,6 +96,7 @@ h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px;
 .folder-name{ font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 .folder-meta{ font-size:10.5px; opacity:.7; font-weight:500; }
 .folder-card.new{ background:var(--white-card); color:var(--ink-soft); border:2px dashed rgba(90,70,150,.25); box-shadow:none; }
+.folder-more{ position:absolute; top:8px; right:8px; width:26px;height:26px;border-radius:50%; border:none; background:rgba(255,255,255,.65); font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:inherit; }
 .c-mint{ background:var(--card-mint); color:var(--card-mint-ink); }
 .c-sky{ background:var(--card-sky); color:var(--card-sky-ink); }
 .c-butter{ background:var(--card-butter); color:var(--card-butter-ink); }
@@ -98,10 +115,6 @@ h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px;
 .empty-state .big{ font-size:40px; }
 .empty-state p{ font-weight:500; }
 
-.fab-organize{ position:fixed; left:50%; transform:translateX(-50%); bottom:104px; max-width:440px; width:calc(100% - 40px); background:linear-gradient(95deg,#8a6bf0,#c084f5); color:#fff; border:none; border-radius:var(--radius-pill); padding:16px 22px; font-family:'Baloo 2'; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 10px 0 rgba(90,50,180,.18), 0 16px 26px rgba(120,80,220,.35); cursor:pointer; z-index:40; }
-.fab-organize:active{ transform:translateX(-50%) scale(.96); }
-.fab-organize.busy{ opacity:.7; }
-
 .bottom-nav{ position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto; background:var(--white-card); backdrop-filter:blur(10px); border-radius:28px 28px 0 0; display:flex; justify-content:space-around; padding:12px 10px calc(10px + env(safe-area-inset-bottom)); box-shadow:0 -6px 20px rgba(90,70,150,.14); z-index:50; }
 .nav-btn{ background:none;border:none; font-family:'Fredoka'; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer; }
 .nav-btn.active{ color:var(--accent); }
@@ -113,6 +126,7 @@ h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px;
 .sheet{ background:#fffaf3; width:100%; max-width:480px; border-radius:30px 30px 0 0; padding:22px 22px calc(26px + env(safe-area-inset-bottom)); transform:translateY(30px); transition:transform .2s ease; max-height:82vh; overflow-y:auto; }
 .overlay.show .sheet{ transform:translateY(0); }
 .sheet h2{ font-family:'Baloo 2'; font-size:21px; margin:0 0 14px; }
+.sheet p{ font-family:'Fredoka'; }
 .sheet-handle{ width:44px;height:5px;border-radius:4px;background:#e6dcf7; margin:0 auto 16px; }
 .field{ width:100%; padding:14px 16px; border-radius:16px; border:2px solid #f0e6ff; font-family:'Fredoka'; font-size:16px; background:#fff; margin-bottom:12px; outline:none; }
 .field:focus{ border-color:var(--accent); }
@@ -122,6 +136,7 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
 .btn.secondary{ background:#f0eaff; color:var(--ink); box-shadow:0 6px 0 rgba(150,130,220,.15); }
 .btn.danger{ background:var(--danger); box-shadow:0 6px 0 rgba(180,50,80,.25); }
 .btn:disabled{ opacity:.5; }
+.btn-organize-me{ margin:16px 20px 0; width:calc(100% - 40px); }
 .action-row{ display:flex; flex-direction:column; gap:6px; }
 .action-item{ display:flex; align-items:center; gap:14px; padding:14px 6px; border-radius:14px; cursor:pointer; font-weight:600; background:none; border:none; font-family:'Fredoka'; font-size:15px; text-align:left; color:var(--ink); width:100%; }
 .action-item:active{ background:#f4eeff; }
@@ -139,12 +154,19 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
 .ai-panel{ margin:16px 20px 0; padding:20px; border-radius:var(--radius-xl); background:linear-gradient(150deg,#efe6ff,#fff0e0); box-shadow:var(--shadow-sm); }
 .ai-panel h3{ font-family:'Baloo 2'; margin:0 0 6px; font-size:17px; }
 .ai-panel p{ font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4; }
+.ai-chat-log{ max-height:230px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding-right:2px; }
+.chat-msg{ padding:10px 14px; border-radius:14px; font-size:13.5px; line-height:1.4; max-width:88%; user-select:text; -webkit-user-select:text; }
+.chat-msg.user{ align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+.chat-msg.assistant{ align-self:flex-start; background:#fff; color:var(--ink); box-shadow:var(--shadow-sm); border-bottom-left-radius:4px; }
+.ai-chat-input-row{ display:flex; gap:8px; align-items:center; }
+.ai-chat-input-row .field{ margin-bottom:0; flex:1; }
+.ai-chat-input-row .btn{ width:auto; padding:14px 18px; margin-top:0; flex:none; }
 
 .settings-list{ margin:16px 20px 40px; display:flex; flex-direction:column; gap:10px; }
 .settings-item{ display:flex; align-items:center; justify-content:space-between; background:var(--white-card); padding:16px 18px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); font-weight:600; cursor:pointer; }
 .settings-item small{ font-weight:500; color:var(--ink-soft); display:block; margin-top:2px; }
 
-#toast{ position:fixed; bottom:180px; left:50%; transform:translateX(-50%) translateY(20px); background:#372a6b; color:#fff; padding:12px 22px; border-radius:var(--radius-pill); font-weight:600; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; white-space:nowrap; max-width:88%; text-align:center; }
+#toast{ position:fixed; bottom:110px; left:50%; transform:translateX(-50%) translateY(20px); background:#372a6b; color:#fff; padding:12px 22px; border-radius:var(--radius-pill); font-weight:600; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; white-space:nowrap; max-width:88%; text-align:center; }
 #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 .hidden{ display:none !important; }
 .progress-line{ height:8px;border-radius:8px;background:#f0e6ff;overflow:hidden;margin-top:10px; }
@@ -173,7 +195,7 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
   </div>
 
   <!-- ============ SEARCH ============ -->
-  <div class="search-bar">
+  <div class="search-bar" id="searchBarWrap">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
     <input id="searchInput" placeholder="Search files &amp; folders">
   </div>
@@ -201,7 +223,10 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
     <div class="section-label">Folders <span class="twinkle">✦</span></div>
     <div class="folder-grid" id="folderGrid"></div>
 
-    <div class="section-label hidden" id="filesLabel">Files</div>
+    <div class="section-label hidden" id="filesLabel" style="justify-content:space-between;">
+      <span>Files</span>
+      <button class="icon-btn small" id="btnSort" title="Sort">↕️</button>
+    </div>
     <div class="file-list" id="fileList"></div>
 
     <div class="empty-state hidden" id="emptyState">
@@ -213,12 +238,6 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
   <div id="view-categories" class="hidden"></div>
   <div id="view-clean" class="hidden"></div>
   <div id="view-me" class="hidden"></div>
-
-  <!-- ============ ORGANIZE FAB ============ -->
-  <button class="fab-organize" id="btnOrganize">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4L12 3z" fill="currentColor"/><path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z" fill="currentColor"/></svg>
-    <span id="organizeLabel">One-tap Organize</span>
-  </button>
 
   <!-- ============ BOTTOM NAV ============ -->
   <div class="bottom-nav">
@@ -250,14 +269,14 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
       <div class="action-row">
         <button class="action-item" data-act="new-folder">📁 New folder</button>
         <button class="action-item" data-act="upload">⬆️ Upload file</button>
-        <button class="action-item" data-act="new-note">📝 New text note</button>
+        <button class="action-item" data-act="new-file">📄 New file</button>
         <button class="action-item" data-act="refresh">🔄 Refresh from cloud</button>
         <button class="action-item" data-act="about">ℹ️ About this app</button>
       </div>
     </div>
   </div>
 
-  <!-- ============ SHEET: item actions ============ -->
+  <!-- ============ SHEET: item / folder actions ============ -->
   <div class="overlay" id="sheetItem">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -266,7 +285,7 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
     </div>
   </div>
 
-  <!-- ============ SHEET: text input (rename / new folder / move) ============ -->
+  <!-- ============ SHEET: text input (rename / new folder / move / new file) ============ -->
   <div class="overlay" id="sheetInput">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -277,11 +296,22 @@ textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace
     </div>
   </div>
 
+  <!-- ============ SHEET: confirm (delete etc.) ============ -->
+  <div class="overlay" id="sheetConfirm">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 id="confirmTitle">Are you sure?</h2>
+      <p id="confirmMessage" style="color:var(--ink-soft); font-weight:500; margin:0 0 16px;"></p>
+      <button class="btn danger" id="confirmYes">Yes, continue</button>
+      <button class="btn secondary" id="confirmNo">Cancel</button>
+    </div>
+  </div>
+
   <!-- ============ SHEET: text editor ============ -->
   <div class="overlay" id="sheetEditor">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h2 id="editorTitle">Edit note</h2>
+      <h2 id="editorTitle">Edit file</h2>
       <textarea class="field" id="editorField"></textarea>
       <button class="btn" id="editorSave">Save to cloud</button>
       <button class="btn secondary" id="editorCancel">Cancel</button>
@@ -318,8 +348,17 @@ let state = {
   path: "/",
   tab: "home",
   search: "",
+  sortBy: "name", // name | size | date
   loaded: false,
+  chatLog: [],
 };
+
+/* ---------------------------------------------------------------------
+   Prevent text selection via long-press / double-tap everywhere except
+   real input fields (the "writing slots").
+   --------------------------------------------------------------------- */
+document.addEventListener('contextmenu', (e)=>{ if(!e.target.closest('input,textarea')) e.preventDefault(); });
+document.addEventListener('selectstart', (e)=>{ if(!e.target.closest('input,textarea')) e.preventDefault(); });
 
 /* ---------------------------------------------------------------------
    Sound effects — synthesized with WebAudio, no asset files needed.
@@ -342,28 +381,11 @@ const Sound = (() => {
   }
   return {
     tap(){ const c=ac(); tone(520, c.currentTime, 0.08, 'triangle', 0.12); },
-    success(){ // long bubbly rising arpeggio
-      const c=ac(); const t=c.currentTime;
-      [523,659,784,988,1175].forEach((f,i)=> tone(f, t+i*0.08, 0.22, 'sine', 0.16, f*1.15));
-    },
-    organize(){ // longer funny "magic sparkle" sweep
-      const c=ac(); const t=c.currentTime;
-      const notes=[392,523,659,784,988,784,988,1319];
-      notes.forEach((f,i)=> tone(f, t+i*0.09, 0.28, i%2?'triangle':'sine', 0.15, f*1.3));
-    },
-    delete(){ // silly descending "boing"
-      const c=ac(); const t=c.currentTime;
-      tone(420, t, 0.32, 'sawtooth', 0.14, 90);
-    },
-    error(){
-      const c=ac(); const t=c.currentTime;
-      tone(180, t, 0.14, 'square', 0.12);
-      tone(140, t+0.15, 0.22, 'square', 0.12);
-    },
-    upload(){
-      const c=ac(); const t=c.currentTime;
-      [300,500,760].forEach((f,i)=> tone(f, t+i*0.06, 0.16, 'triangle', 0.14, f*1.1));
-    }
+    success(){ const c=ac(); const t=c.currentTime; [523,659,784,988,1175].forEach((f,i)=> tone(f, t+i*0.08, 0.22, 'sine', 0.16, f*1.15)); },
+    organize(){ const c=ac(); const t=c.currentTime; [392,523,659,784,988,784,988,1319].forEach((f,i)=> tone(f, t+i*0.09, 0.28, i%2?'triangle':'sine', 0.15, f*1.3)); },
+    delete(){ const c=ac(); tone(420, c.currentTime, 0.32, 'sawtooth', 0.14, 90); },
+    error(){ const c=ac(); const t=c.currentTime; tone(180, t, 0.14, 'square', 0.12); tone(140, t+0.15, 0.22, 'square', 0.12); },
+    upload(){ const c=ac(); const t=c.currentTime; [300,500,760].forEach((f,i)=> tone(f, t+i*0.06, 0.16, 'triangle', 0.14, f*1.1)); }
   };
 })();
 
@@ -381,13 +403,8 @@ async function tg(method, formOrParams){
   return data.result;
 }
 
-function loadCache(){
-  try { const raw = localStorage.getItem(CFG.CACHE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
-  return null;
-}
-function saveCache(idx){
-  try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(idx)); } catch(e){}
-}
+function loadCache(){ try { const raw = localStorage.getItem(CFG.CACHE_KEY); if (raw) return JSON.parse(raw); } catch(e){} return null; }
+function saveCache(idx){ try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(idx)); } catch(e){} }
 
 async function fetchIndexFromChannel(){
   const chat = await tg('getChat', { chat_id: CHAT_ID });
@@ -423,10 +440,8 @@ async function persistIndex(){
   form.append('message_id', idx.indexMessageId);
   form.append('media', JSON.stringify({ type:'document', media:'attach://idxfile', caption:'📇 RiNi Cloud index — do not delete this message' }));
   form.append('idxfile', new Blob([JSON.stringify(payload)], {type:'application/json'}), 'index.json');
-  try {
-    await tg('editMessageMedia', form);
-  } catch(e){
-    // If the pinned message was manually deleted from Telegram, recreate it.
+  try { await tg('editMessageMedia', form); }
+  catch(e){
     const fresh = await createFreshIndex();
     state.index.indexMessageId = fresh.indexMessageId;
     saveCache(state.index);
@@ -452,6 +467,7 @@ async function bootIndex(){
    Virtual filesystem helpers
    --------------------------------------------------------------------- */
 function normPath(p){
+  if (!p) p = '/';
   if (!p.startsWith('/')) p = '/'+p;
   if (p.length>1 && p.endsWith('/')) p = p.slice(0,-1);
   return p;
@@ -464,16 +480,11 @@ function parentPath(p){
   return parent === '' ? '/' : parent;
 }
 function baseName(p){ const parts = p.split('/'); return parts[parts.length-1] || '/'; }
-
-function directSubfolders(path){
-  return state.index.folders.filter(f => f !== '/' && parentPath(f) === path);
-}
-function filesIn(path){
-  return state.index.files.filter(f => f.path === path);
-}
+function directSubfolders(path){ return state.index.folders.filter(f => f !== '/' && parentPath(f) === path); }
+function filesIn(path){ return state.index.files.filter(f => f.path === path); }
 function folderStats(path){
-  // recursive size + count for a folder (used for folder-card meta)
-  const all = state.index.files.filter(f => f.path === path || f.path.startsWith(path === '/' ? '/' : path+'/'));
+  const prefix = path === '/' ? '/' : path+'/';
+  const all = state.index.files.filter(f => f.path === path || f.path.startsWith(prefix));
   const size = all.reduce((s,f)=>s+f.size,0);
   return { count: all.length, size };
 }
@@ -490,7 +501,7 @@ function fileGlyph(mime, name){
   if ((mime||'').startsWith('audio/')) return {emoji:'🎵', cls:'c-peach'};
   if (['zip','rar','7z','tar','gz'].includes(ext)) return {emoji:'🗜️', cls:'c-lilac'};
   if (['pdf'].includes(ext)) return {emoji:'📕', cls:'c-blush'};
-  if (['doc','docx','txt','md','note'].includes(ext)) return {emoji:'📄', cls:'c-butter'};
+  if (['doc','docx','txt','md','note','json','csv'].includes(ext)) return {emoji:'📄', cls:'c-butter'};
   return {emoji:'📦', cls:'c-sky'};
 }
 function fileCategory(mime, name){
@@ -499,24 +510,143 @@ function fileCategory(mime, name){
   if ((mime||'').startsWith('video/')) return 'Videos';
   if ((mime||'').startsWith('audio/')) return 'Audio';
   if (['zip','rar','7z','tar','gz'].includes(ext)) return 'Archives';
-  if (['pdf','doc','docx','txt','md','note'].includes(ext)) return 'Documents';
+  if (['pdf','doc','docx','txt','md','note','json','csv'].includes(ext)) return 'Documents';
   return 'Other';
+}
+function sortFiles(list){
+  const arr = [...list];
+  if (state.sortBy==='name') arr.sort((a,b)=> a.name.localeCompare(b.name));
+  else if (state.sortBy==='size') arr.sort((a,b)=> b.size-a.size);
+  else if (state.sortBy==='date') arr.sort((a,b)=> (b.date||0)-(a.date||0));
+  return arr;
+}
+function copyToClipboard(text){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{ toast('Path copied'); Sound.tap(); }).catch(()=> toast('Could not copy'));
+  } else { toast('Clipboard not available'); }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------------------------------------------------------------
+   Core file/folder operations — shared by manual sheets AND the AI chat
+   executor, so both paths behave identically and stay bug-free.
+   --------------------------------------------------------------------- */
+async function opCreateFolder(path){
+  const p = normPath(path);
+  if (!state.index.folders.includes(p)) state.index.folders.push(p);
+  await persistIndex();
+}
+
+async function opDeleteFolder(path){
+  const p = normPath(path);
+  const prefix = p==='/' ? '/' : p+'/';
+  const filesToDelete = state.index.files.filter(f=> f.path===p || f.path.startsWith(prefix));
+  for (const f of filesToDelete){ try { await tg('deleteMessage', {chat_id:CHAT_ID, message_id:f.messageId}); } catch(e){} }
+  state.index.files = state.index.files.filter(f=> !(f.path===p || f.path.startsWith(prefix)));
+  state.index.folders = state.index.folders.filter(f=> !(f===p || f.startsWith(prefix)));
+  await persistIndex();
+}
+
+async function opMoveFolderPath(fromPath, toPath){
+  const from = normPath(fromPath), to = normPath(toPath);
+  if (from==='/' || from===to) return;
+  const fromPrefix = from+'/';
+  state.index.folders = state.index.folders.map(f=>{
+    if (f===from) return to;
+    if (f.startsWith(fromPrefix)) return to + f.slice(from.length);
+    return f;
+  });
+  state.index.files.forEach(f=>{
+    if (f.path===from) f.path = to;
+    else if (f.path.startsWith(fromPrefix)) f.path = to + f.path.slice(from.length);
+  });
+  if (!state.index.folders.includes(to)) state.index.folders.push(to);
+  if (state.path===from) state.path = to;
+  else if (state.path.startsWith(fromPrefix)) state.path = to + state.path.slice(from.length);
+  await persistIndex();
+}
+
+async function opRenameFolder(path, newName){
+  const p = normPath(path);
+  if (p==='/') return;
+  const newPath = joinPath(parentPath(p), newName);
+  await opMoveFolderPath(p, newPath);
+}
+
+async function opCreateTextFile(path, name, content){
+  const form = new FormData();
+  form.append('chat_id', CHAT_ID);
+  form.append('document', new Blob([content],{type:'text/plain'}), name);
+  form.append('caption', normPath(path));
+  const sent = await tg('sendDocument', form);
+  const f = { id:'f_'+sent.message_id, messageId:sent.message_id, fileId:sent.document.file_id,
+    name, path: normPath(path), size: sent.document.file_size||new Blob([content]).size,
+    mime:'text/plain', date: Date.now() };
+  state.index.files.push(f);
+  await persistIndex();
+  return f;
+}
+
+async function opUploadFile(path, file){
+  const form = new FormData();
+  form.append('chat_id', CHAT_ID);
+  form.append('document', file, file.name);
+  form.append('caption', normPath(path));
+  const sent = await tg('sendDocument', form);
+  const f = { id:'f_'+sent.message_id, messageId:sent.message_id, fileId:sent.document.file_id,
+    name:file.name, path: normPath(path), size: sent.document.file_size||file.size,
+    mime:file.type||'application/octet-stream', date: Date.now() };
+  state.index.files.push(f);
+  await persistIndex();
+  return f;
+}
+
+async function opRenameFile(id, newName){
+  const f = state.index.files.find(x=>x.id===id);
+  if (!f || !newName) return;
+  f.name = newName;
+  await persistIndex();
+}
+
+async function opMoveFile(id, toPath){
+  const f = state.index.files.find(x=>x.id===id);
+  if (!f) return;
+  const to = normPath(toPath);
+  if (to!=='/' && !state.index.folders.includes(to)) state.index.folders.push(to);
+  f.path = to;
+  await persistIndex();
+}
+
+async function opDeleteFile(id){
+  const f = state.index.files.find(x=>x.id===id);
+  if (!f) return;
+  try { await tg('deleteMessage', {chat_id:CHAT_ID, message_id:f.messageId}); } catch(e){}
+  state.index.files = state.index.files.filter(x=>x.id!==id);
+  await persistIndex();
+}
+
+async function opEditTextFile(id, newContent){
+  const f = state.index.files.find(x=>x.id===id);
+  if (!f) return;
+  const form = new FormData();
+  form.append('chat_id', CHAT_ID);
+  form.append('message_id', f.messageId);
+  form.append('media', JSON.stringify({type:'document', media:'attach://f', caption:f.path}));
+  form.append('f', new Blob([newContent], {type:'text/plain'}), f.name);
+  await tg('editMessageMedia', form);
+  f.size = new Blob([newContent]).size;
+  await persistIndex();
 }
 
 /* ---------------------------------------------------------------------
    Rendering
    --------------------------------------------------------------------- */
-function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
-
 function renderCrumbs(){
   const crumbs = document.getElementById('crumbs');
   const parts = state.path === '/' ? [] : state.path.split('/').filter(Boolean);
   let acc = '';
   let html = `<button class="crumb ${state.path==='/'?'current':''}" data-p="/">Home</button>`;
-  parts.forEach((p)=>{
-    acc += '/'+p;
-    html += `<button class="crumb ${acc===state.path?'current':''}" data-p="${acc}">${p}</button>`;
-  });
+  parts.forEach((p)=>{ acc += '/'+p; html += `<button class="crumb ${acc===state.path?'current':''}" data-p="${acc}">${p}</button>`; });
   crumbs.innerHTML = html;
   crumbs.querySelectorAll('.crumb').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.path = b.dataset.p; render(); });
   document.getElementById('btnBack').disabled = state.path === '/';
@@ -527,28 +657,40 @@ function renderStorage(){
   const totalBytes = allFiles.reduce((s,f)=>s+f.size,0);
   document.getElementById('storageUsedText').textContent = fmtSize(totalBytes)+' used';
   document.getElementById('storageSub').textContent = `${allFiles.length} file${allFiles.length===1?'':'s'} • ${state.index.folders.length-1} folder${state.index.folders.length-1===1?'':'s'}`;
-  // visual fill just gives a gentle sense of activity — plan is unlimited, no hard cap
   const pct = Math.min(96, 6 + Math.log2(1+totalBytes/1e6)*6);
   document.getElementById('storageBar').style.width = pct+'%';
-
   const byCat = {};
   allFiles.forEach(f=>{ const c=fileCategory(f.mime,f.name); byCat[c]=(byCat[c]||0)+f.size; });
   const wrap = document.getElementById('typeBreakdown');
   wrap.innerHTML = Object.keys(byCat).length ? Object.entries(byCat).map(([k,v])=>`<span class="type-pill">${k} · ${fmtSize(v)}</span>`).join('') : `<span class="type-pill">No files yet</span>`;
 }
 
+const PALETTE = ['c-mint','c-sky','c-butter','c-blush','c-lilac','c-peach'];
+
 function folderCardHTML(path, colorClass){
   const name = baseName(path);
   const stats = folderStats(path);
   return `
-    <button class="folder-card ${colorClass}" data-folder="${path}">
+    <div class="folder-card ${colorClass}" data-folder="${path}">
+      <button class="folder-more" data-foldermore="${path}">⋮</button>
       <div class="folder-glyph">📁</div>
       <div class="folder-name">${name}</div>
       <div class="folder-meta">${stats.count} item${stats.count===1?'':'s'} • ${fmtSize(stats.size)}</div>
-    </button>`;
+    </div>`;
 }
 
-const PALETTE = ['c-mint','c-sky','c-butter','c-blush','c-lilac','c-peach'];
+function fileRowHTML(f, showPath){
+  const g = fileGlyph(f.mime, f.name);
+  return `<div class="file-row" data-fid="${f.id}">
+    <div class="folder-glyph ${g.cls}">${g.emoji}</div>
+    <div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)}${showPath? ' • '+f.path : ''}</div></div>
+    <button class="file-more" data-more="${f.id}">⋮</button>
+  </div>`;
+}
+function wireFileRows(container){
+  container.querySelectorAll('.file-row').forEach(row=> row.onclick = (e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); });
+  container.querySelectorAll('[data-more]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
+}
 
 function renderHome(){
   renderCrumbs();
@@ -564,10 +706,10 @@ function renderHome(){
   let files = filesIn(state.path);
 
   if (q){
-    // search across the WHOLE tree by name
     subfolders = state.index.folders.filter(f=> f!=='/' && baseName(f).toLowerCase().includes(q));
     files = state.index.files.filter(f=> f.name.toLowerCase().includes(q));
   }
+  files = sortFiles(files);
 
   grid.innerHTML = subfolders.map((f,i)=> folderCardHTML(f, PALETTE[i%PALETTE.length])).join('') +
     (q ? '' : `<button class="folder-card new" data-newfolder="1">
@@ -576,32 +718,22 @@ function renderHome(){
         <div class="folder-meta">create one</div>
       </button>`);
 
-  grid.querySelectorAll('[data-folder]').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.path = b.dataset.folder; state.search=''; document.getElementById('searchInput').value=''; render(); });
+  grid.querySelectorAll('[data-folder]').forEach(elc=> elc.onclick = (e)=>{
+    if (e.target.closest('[data-foldermore]')) return;
+    Sound.tap(); state.path = elc.dataset.folder; state.search=''; document.getElementById('searchInput').value=''; render();
+  });
+  grid.querySelectorAll('[data-foldermore]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openFolderSheet(b.dataset.foldermore); });
   const nf = grid.querySelector('[data-newfolder]');
   if (nf) nf.onclick = ()=>{ Sound.tap(); openNewFolder(); };
 
   if (files.length){
     filesLabel.classList.remove('hidden');
-    fileListEl.innerHTML = files.map(f=>{
-      const g = fileGlyph(f.mime, f.name);
-      return `<div class="file-row" data-fid="${f.id}">
-        <div class="folder-glyph ${g.cls}">${g.emoji}</div>
-        <div class="file-info">
-          <div class="file-name">${f.name}</div>
-          <div class="file-meta">${fmtSize(f.size)}${q? ' • '+f.path : ''}</div>
-        </div>
-        <button class="file-more" data-more="${f.id}">⋮</button>
-      </div>`;
-    }).join('');
-    fileListEl.querySelectorAll('.file-row').forEach(row=>{
-      row.onclick = (e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); };
-    });
-    fileListEl.querySelectorAll('[data-more]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
+    fileListEl.innerHTML = files.map(f=> fileRowHTML(f, !!q)).join('');
+    wireFileRows(fileListEl);
   } else {
     filesLabel.classList.add('hidden');
     fileListEl.innerHTML = '';
   }
-
   emptyState.classList.toggle('hidden', !(subfolders.length===0 && files.length===0));
 }
 
@@ -628,21 +760,12 @@ function renderCategories(){
   grid.querySelectorAll('[data-cat]').forEach(b=> b.onclick=()=>{
     Sound.tap();
     const c = b.dataset.cat;
-    const files = state.index.files.filter(f=> fileCategory(f.mime,f.name)===c);
+    const files = sortFiles(state.index.files.filter(f=> fileCategory(f.mime,f.name)===c));
     const label = view.querySelector('#catFilesLabel');
     const list = view.querySelector('#catFileList');
-    label.classList.remove('hidden');
-    label.textContent = c;
-    list.innerHTML = files.map(f=>{
-      const g = fileGlyph(f.mime, f.name);
-      return `<div class="file-row" data-fid="${f.id}">
-        <div class="folder-glyph ${g.cls}">${g.emoji}</div>
-        <div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)} • ${f.path}</div></div>
-        <button class="file-more" data-more="${f.id}">⋮</button>
-      </div>`;
-    }).join('') || `<div class="empty-state"><p>No files in this category yet.</p></div>`;
-    list.querySelectorAll('.file-row').forEach(row=> row.onclick=(e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); });
-    list.querySelectorAll('[data-more]').forEach(b2=> b2.onclick=(e)=>{ e.stopPropagation(); openItemSheet(b2.dataset.more); });
+    label.classList.remove('hidden'); label.textContent = c;
+    list.innerHTML = files.map(f=> fileRowHTML(f, true)).join('') || `<div class="empty-state"><p>No files in this category yet.</p></div>`;
+    wireFileRows(list);
   });
 }
 
@@ -669,26 +792,20 @@ function renderClean(){
     </div>`;
 
   const largeEl = view.querySelector('#cleanLarge');
-  largeEl.innerHTML = large.length ? large.map(f=>{
-    const g = fileGlyph(f.mime,f.name);
-    return `<div class="file-row" data-fid="${f.id}"><div class="folder-glyph ${g.cls}">${g.emoji}</div><div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)} • ${f.path}</div></div><button class="file-more" data-more="${f.id}">⋮</button></div>`;
-  }).join('') : `<div class="empty-state"><p>No files yet.</p></div>`;
-  largeEl.querySelectorAll('.file-row').forEach(row=> row.onclick=(e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); });
-  largeEl.querySelectorAll('[data-more]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
+  largeEl.innerHTML = large.length ? large.map(f=> fileRowHTML(f, true)).join('') : `<div class="empty-state"><p>No files yet.</p></div>`;
+  wireFileRows(largeEl);
 
   const efEl = view.querySelector('#cleanEmptyFolders');
   efEl.innerHTML = emptyFolders.length ? emptyFolders.map(f=> `
     <div class="file-row"><div class="folder-glyph c-lilac">📁</div><div class="file-info"><div class="file-name">${f}</div><div class="file-meta">empty</div></div>
     <button class="file-more" data-delfolder="${f}">🗑️</button></div>`).join('') : `<div class="empty-state"><p>No empty folders. Tidy!</p></div>`;
-  efEl.querySelectorAll('[data-delfolder]').forEach(b=> b.onclick=async()=>{
-    state.index.folders = state.index.folders.filter(f=> f!==b.dataset.delfolder);
-    await persistIndex(); Sound.delete(); toast('Empty folder removed'); render();
+  efEl.querySelectorAll('[data-delfolder]').forEach(b=> b.onclick=()=>{
+    confirmAction('Delete empty folder?', `"${baseName(b.dataset.delfolder)}" will be removed.`, async ()=>{
+      await opDeleteFolder(b.dataset.delfolder); Sound.delete(); toast('Folder removed'); render();
+    });
   });
 
-  view.querySelector('#btnClearCache').onclick = ()=>{
-    localStorage.removeItem(CFG.CACHE_KEY);
-    toast('Local cache cleared'); Sound.tap();
-  };
+  view.querySelector('#btnClearCache').onclick = ()=>{ localStorage.removeItem(CFG.CACHE_KEY); toast('Local cache cleared'); Sound.tap(); };
 }
 
 function renderMe(){
@@ -706,15 +823,21 @@ function renderMe(){
       <button class="btn" id="btnPuterAuth" style="margin-top:16px;">${signedIn ? 'Sign out of Puter' : 'Sign up / Log in with Puter'}</button>
     </div>
 
+    <button class="btn btn-organize-me" id="btnOrganizeMe" ${signedIn?'':'disabled'}>✨ One-tap Organize</button>
+
     <div class="ai-panel">
-      <h3>🤖 AI File Organizer</h3>
-      <p>${signedIn ? 'Let AI look at your files and sort them into tidy folders automatically.' : 'Sign in with Puter above to unlock the AI organizer and future AI tools.'}</p>
-      <button class="btn" id="btnAiFromMe" ${signedIn?'':'disabled'}>Organize my files with AI</button>
+      <h3>🤖 AI Assistant</h3>
+      <p>${signedIn ? 'Type what you want done — create, rename, move, delete, organize, or ask me to analyze your storage.' : 'Sign in with Puter above to chat with the AI assistant.'}</p>
+      <div class="ai-chat-log" id="aiChatLog"></div>
+      <div class="ai-chat-input-row">
+        <input class="field" id="aiChatInput" placeholder="e.g. move photo.png to /Pictures" ${signedIn?'':'disabled'}>
+        <button class="btn" id="aiChatSend" ${signedIn?'':'disabled'}>➤</button>
+      </div>
     </div>
 
     <div class="section-label">Settings</div>
     <div class="settings-list">
-      <div class="settings-item" id="meAbout">About RiNi Cloud OS <small>Version 1.0 • Telegram-backed storage</small></div>
+      <div class="settings-item" id="meAbout">About RiNi Cloud OS <small>Version 1.1 • Telegram-backed storage</small></div>
       <div class="settings-item" id="meChannel">Storage channel <small>Chat ID ••••${String(CHAT_ID).slice(-4)}</small></div>
       <div class="settings-item" id="meRefresh">Refresh from cloud <small>Re-sync the index now</small></div>
     </div>`;
@@ -725,9 +848,26 @@ function renderMe(){
     else { try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); toast('Signed in!'); } catch(e){ toast('Sign-in cancelled'); } }
     renderMe();
   };
-  view.querySelector('#btnAiFromMe').onclick = runAiOrganize;
+
+  view.querySelector('#btnOrganizeMe').onclick = async ()=>{
+    Sound.tap();
+    if (!puterSignedIn()){ toast('Sign in with Puter first'); return; }
+    const btn = view.querySelector('#btnOrganizeMe');
+    btn.disabled = true; btn.textContent = '✨ Organizing…';
+    try { await aiAutoOrganize(); Sound.organize(); toast('Files organized ✨'); }
+    catch(e){ toast('Organize failed — try again'); Sound.error(); }
+    render();
+  };
+
+  renderChatLog();
+  const sendFn = ()=> runAiChatCommand(view.querySelector('#aiChatInput').value);
+  const sendBtn = view.querySelector('#aiChatSend');
+  const inputEl = view.querySelector('#aiChatInput');
+  if (sendBtn) sendBtn.onclick = sendFn;
+  if (inputEl) inputEl.onkeydown = (e)=>{ if (e.key==='Enter'){ e.preventDefault(); sendFn(); } };
+
   view.querySelector('#meRefresh').onclick = async ()=>{ Sound.tap(); await bootIndex(); toast('Synced'); };
-  view.querySelector('#meAbout').onclick = ()=> openMenuAction('about');
+  view.querySelector('#meAbout').onclick = ()=> toast('RiNi Cloud OS — your files, stored as an unlimited Telegram channel ☁️');
 }
 
 function render(){
@@ -735,9 +875,12 @@ function render(){
   document.getElementById('view-categories').classList.toggle('hidden', state.tab!=='categories');
   document.getElementById('view-clean').classList.toggle('hidden', state.tab!=='clean');
   document.getElementById('view-me').classList.toggle('hidden', state.tab!=='me');
-  document.getElementById('btnOrganize').classList.toggle('hidden', state.tab==='me');
-
   document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===state.tab));
+
+  const onHome = state.tab==='home';
+  document.getElementById('btnBack').classList.toggle('hidden', !onHome);
+  document.getElementById('crumbs').classList.toggle('hidden', !onHome);
+  document.getElementById('searchBarWrap').classList.toggle('hidden', !onHome);
 
   if (state.tab==='home') renderHome();
   else if (state.tab==='categories') renderCategories();
@@ -751,49 +894,79 @@ function render(){
 let toastTimer;
 function toast(msg){
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> t.classList.remove('show'), 2400);
 }
 
 /* ---------------------------------------------------------------------
-   Sheets (generic open/close)
+   Sheets
    --------------------------------------------------------------------- */
 function openSheet(id){ document.getElementById(id).classList.add('show'); }
 function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
 document.querySelectorAll('.overlay').forEach(ov=> ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); }));
 
-/* ---- new folder ---- */
-function openNewFolder(){
-  document.getElementById('inputSheetTitle').textContent = 'New folder';
+function promptInput(title, initial, placeholder, onConfirm){
+  document.getElementById('inputSheetTitle').textContent = title;
   const field = document.getElementById('inputSheetField');
-  field.value=''; field.placeholder = 'Folder name';
+  field.value = initial||''; field.placeholder = placeholder||'';
   openSheet('sheetInput');
   document.getElementById('inputSheetConfirm').onclick = async ()=>{
-    const name = field.value.trim();
-    if (!name) return;
-    const newPath = joinPath(state.path, name);
-    if (!state.index.folders.includes(newPath)) state.index.folders.push(newPath);
+    const val = field.value.trim();
+    if (!val) return;
     closeSheet('sheetInput');
-    await persistIndex();
-    Sound.success(); toast('Folder created'); render();
+    await onConfirm(val);
   };
   document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
 }
 
-/* ---- item action sheet (file) ---- */
+function confirmAction(title, message, onYes){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  openSheet('sheetConfirm');
+  document.getElementById('confirmYes').onclick = async ()=>{ closeSheet('sheetConfirm'); await onYes(); };
+  document.getElementById('confirmNo').onclick = ()=> closeSheet('sheetConfirm');
+}
+
+function openNewFolder(){
+  promptInput('New folder', '', 'Folder name', async (name)=>{
+    await opCreateFolder(joinPath(state.path, name));
+    Sound.success(); toast('Folder created'); render();
+  });
+}
+
+function openNewFile(){
+  promptInput('New file', '', 'filename.txt', (name)=>{
+    let fname = name.trim() || 'file.txt';
+    if (!fname.includes('.')) fname += '.txt';
+    document.getElementById('editorTitle').textContent = 'New file — '+fname;
+    document.getElementById('editorField').value = '';
+    openSheet('sheetEditor');
+    document.getElementById('editorSave').onclick = async ()=>{
+      const text = document.getElementById('editorField').value;
+      closeSheet('sheetEditor');
+      try { await opCreateTextFile(state.path, fname, text); Sound.success(); toast('File saved to cloud'); }
+      catch(e){ toast('Upload failed'); Sound.error(); }
+      render();
+    };
+    document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
+  });
+}
+
 function openItemSheet(fileId){
   const f = state.index.files.find(x=>x.id===fileId);
   if (!f) return;
-  document.getElementById('itemSheetTitle').textContent = f.name;
   const isText = /\.(txt|md|note|json|csv)$/i.test(f.name) || (f.mime||'').startsWith('text/');
+  const isImage = (f.mime||'').startsWith('image/');
+  document.getElementById('itemSheetTitle').textContent = f.name;
   const row = document.getElementById('itemActionRow');
   row.innerHTML = `
     <button class="action-item" data-a="download">⬇️ Download</button>
+    ${isImage ? '<button class="action-item" data-a="preview">👁️ Preview</button>' : ''}
     ${isText ? '<button class="action-item" data-a="edit">✏️ Edit content</button>' : ''}
     <button class="action-item" data-a="rename">🔤 Rename</button>
     <button class="action-item" data-a="move">📂 Change path / move</button>
+    <button class="action-item" data-a="copy">🔗 Copy path</button>
     <button class="action-item danger-text" data-a="delete">🗑️ Delete</button>`;
   openSheet('sheetItem');
 
@@ -808,6 +981,13 @@ function openItemSheet(fileId){
     } catch(e){ toast('Could not fetch the download link'); Sound.error(); }
   };
 
+  const prevBtn = row.querySelector('[data-a="preview"]');
+  if (prevBtn) prevBtn.onclick = async ()=>{
+    closeSheet('sheetItem');
+    try { const file = await tg('getFile', { file_id: f.fileId }); window.open(`${FILEAPI}/${file.file_path}`, '_blank'); }
+    catch(e){ toast('Preview failed'); Sound.error(); }
+  };
+
   const editBtn = row.querySelector('[data-a="edit"]');
   if (editBtn) editBtn.onclick = async ()=>{
     closeSheet('sheetItem');
@@ -819,14 +999,10 @@ function openItemSheet(fileId){
       openSheet('sheetEditor');
       document.getElementById('editorSave').onclick = async ()=>{
         const newText = document.getElementById('editorField').value;
-        const form = new FormData();
-        form.append('chat_id', CHAT_ID);
-        form.append('message_id', f.messageId);
-        form.append('media', JSON.stringify({type:'document', media:'attach://f', caption:f.path}));
-        form.append('f', new Blob([newText], {type:'text/plain'}), f.name);
-        try { await tg('editMessageMedia', form); f.size = new Blob([newText]).size; await persistIndex(); Sound.success(); toast('Saved'); }
+        closeSheet('sheetEditor');
+        try { await opEditTextFile(f.id, newText); Sound.success(); toast('Saved'); }
         catch(err){ toast('Could not save'); Sound.error(); }
-        closeSheet('sheetEditor'); render();
+        render();
       };
       document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
     } catch(e){ toast('Could not load content'); Sound.error(); }
@@ -834,87 +1010,75 @@ function openItemSheet(fileId){
 
   row.querySelector('[data-a="rename"]').onclick = ()=>{
     closeSheet('sheetItem');
-    document.getElementById('inputSheetTitle').textContent = 'Rename file';
-    const field = document.getElementById('inputSheetField');
-    field.value = f.name; field.placeholder='File name';
-    openSheet('sheetInput');
-    document.getElementById('inputSheetConfirm').onclick = async ()=>{
-      const val = field.value.trim(); if(!val) return;
-      f.name = val; closeSheet('sheetInput');
-      await persistIndex(); Sound.success(); toast('Renamed'); render();
-    };
-    document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+    promptInput('Rename file', f.name, 'File name', async (val)=>{ await opRenameFile(f.id, val); Sound.success(); toast('Renamed'); render(); });
   };
-
   row.querySelector('[data-a="move"]').onclick = ()=>{
     closeSheet('sheetItem');
-    document.getElementById('inputSheetTitle').textContent = 'Move to path';
-    const field = document.getElementById('inputSheetField');
-    field.value = f.path; field.placeholder='/Folder/Subfolder';
-    openSheet('sheetInput');
-    document.getElementById('inputSheetConfirm').onclick = async ()=>{
-      const val = normPath(field.value.trim()||'/');
-      if (val !== '/' && !state.index.folders.includes(val)) state.index.folders.push(val);
-      f.path = val; closeSheet('sheetInput');
-      await persistIndex(); Sound.success(); toast('Moved'); render();
-    };
-    document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+    promptInput('Move to path', f.path, '/Folder/Subfolder', async (val)=>{ await opMoveFile(f.id, val); Sound.success(); toast('Moved'); render(); });
   };
-
-  row.querySelector('[data-a="delete"]').onclick = async ()=>{
+  row.querySelector('[data-a="copy"]').onclick = ()=>{
     closeSheet('sheetItem');
-    try { await tg('deleteMessage', { chat_id: CHAT_ID, message_id: f.messageId }); } catch(e){ /* message may already be gone */ }
-    state.index.files = state.index.files.filter(x=>x.id!==fileId);
-    await persistIndex(); Sound.delete(); toast('Deleted'); render();
+    copyToClipboard((f.path==='/'?'':f.path)+'/'+f.name);
+  };
+  row.querySelector('[data-a="delete"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    confirmAction('Delete file?', `"${f.name}" will be permanently deleted from your cloud storage.`, async ()=>{
+      await opDeleteFile(f.id); Sound.delete(); toast('Deleted'); render();
+    });
   };
 }
 
-/* ---- quick menu ---- */
+function openFolderSheet(path){
+  document.getElementById('itemSheetTitle').textContent = baseName(path);
+  const row = document.getElementById('itemActionRow');
+  row.innerHTML = `
+    <button class="action-item" data-a="open">📂 Open folder</button>
+    <button class="action-item" data-a="copy">🔗 Copy path</button>
+    <button class="action-item" data-a="rename">🔤 Rename folder</button>
+    <button class="action-item" data-a="move">📦 Move folder</button>
+    <button class="action-item danger-text" data-a="delete">🗑️ Delete folder</button>`;
+  openSheet('sheetItem');
+
+  row.querySelector('[data-a="open"]').onclick = ()=>{ closeSheet('sheetItem'); Sound.tap(); state.path = path; render(); };
+  row.querySelector('[data-a="copy"]').onclick = ()=>{ closeSheet('sheetItem'); copyToClipboard(path); };
+  row.querySelector('[data-a="rename"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    promptInput('Rename folder', baseName(path), 'Folder name', async (val)=>{ await opRenameFolder(path, val); Sound.success(); toast('Folder renamed'); render(); });
+  };
+  row.querySelector('[data-a="move"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    promptInput('Move folder to path', path, '/NewParent', async (val)=>{
+      const newPath = joinPath(normPath(val), baseName(path));
+      await opMoveFolderPath(path, newPath); Sound.success(); toast('Folder moved'); render();
+    });
+  };
+  row.querySelector('[data-a="delete"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    confirmAction('Delete folder?', `This deletes "${baseName(path)}" and everything inside it. This can't be undone.`, async ()=>{
+      await opDeleteFolder(path); Sound.delete(); toast('Folder deleted');
+      if (state.path===path || state.path.startsWith(path+'/')) state.path = parentPath(path);
+      render();
+    });
+  };
+}
+
+/* ---- quick menu / top bar buttons ---- */
 document.getElementById('btnMenu').onclick = ()=>{ Sound.tap(); openSheet('sheetMenu'); };
 document.getElementById('btnBack').onclick = ()=>{ if(state.path==='/') return; Sound.tap(); state.path = parentPath(state.path); render(); };
+document.getElementById('btnSort').onclick = ()=>{
+  Sound.tap();
+  state.sortBy = state.sortBy==='name' ? 'size' : state.sortBy==='size' ? 'date' : 'name';
+  toast('Sorted by '+state.sortBy); render();
+};
 document.querySelectorAll('#sheetMenu [data-act]').forEach(b=> b.onclick = ()=> openMenuAction(b.dataset.act));
 
 function openMenuAction(act){
   closeSheet('sheetMenu');
   if (act==='new-folder') openNewFolder();
   else if (act==='upload') document.getElementById('fileInputHidden').click();
-  else if (act==='new-note') openNewNote();
+  else if (act==='new-file') openNewFile();
   else if (act==='refresh') bootIndex().then(()=>toast('Synced with cloud'));
   else if (act==='about') toast('RiNi Cloud OS — your files, stored as an unlimited Telegram channel ☁️');
-}
-
-function openNewNote(){
-  document.getElementById('inputSheetTitle').textContent = 'New note name';
-  const field = document.getElementById('inputSheetField');
-  field.value=''; field.placeholder='notes.txt';
-  openSheet('sheetInput');
-  document.getElementById('inputSheetConfirm').onclick = ()=>{
-    let name = field.value.trim() || 'note.txt';
-    if (!name.includes('.')) name += '.txt';
-    closeSheet('sheetInput');
-    document.getElementById('editorTitle').textContent = 'New note — '+name;
-    document.getElementById('editorField').value = '';
-    openSheet('sheetEditor');
-    document.getElementById('editorSave').onclick = async ()=>{
-      const text = document.getElementById('editorField').value;
-      const form = new FormData();
-      form.append('chat_id', CHAT_ID);
-      form.append('document', new Blob([text],{type:'text/plain'}), name);
-      form.append('caption', state.path);
-      try {
-        const sent = await tg('sendDocument', form);
-        state.index.files.push({
-          id: 'f_'+sent.message_id, messageId: sent.message_id, fileId: sent.document.file_id,
-          name, path: state.path, size: sent.document.file_size||new Blob([text]).size,
-          mime: 'text/plain', date: Date.now()
-        });
-        await persistIndex(); Sound.success(); toast('Note saved to cloud');
-      } catch(e){ toast('Upload failed'); Sound.error(); }
-      closeSheet('sheetEditor'); render();
-    };
-    document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
-  };
-  document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
 }
 
 /* ---- upload flow ---- */
@@ -922,29 +1086,16 @@ document.getElementById('fileInputHidden').onchange = async (e)=>{
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  if (file.size > CFG.MAX_FILE_MB*1024*1024){
-    toast(`Telegram's bot upload limit is ${CFG.MAX_FILE_MB}MB per file`); Sound.error(); return;
-  }
+  if (file.size > CFG.MAX_FILE_MB*1024*1024){ toast(`Telegram's bot upload limit is ${CFG.MAX_FILE_MB}MB per file`); Sound.error(); return; }
   document.getElementById('uploadFileName').textContent = file.name;
   document.getElementById('uploadProgressFill').style.width='10%';
   openSheet('sheetUpload');
   try {
-    const form = new FormData();
-    form.append('chat_id', CHAT_ID);
-    form.append('document', file, file.name);
-    form.append('caption', state.path);
     document.getElementById('uploadProgressFill').style.width='55%';
-    const sent = await tg('sendDocument', form);
-    document.getElementById('uploadProgressFill').style.width='90%';
-    state.index.files.push({
-      id: 'f_'+sent.message_id, messageId: sent.message_id, fileId: sent.document.file_id,
-      name: file.name, path: state.path, size: sent.document.file_size||file.size,
-      mime: file.type||'application/octet-stream', date: Date.now()
-    });
-    await persistIndex();
+    await opUploadFile(state.path, file);
     document.getElementById('uploadProgressFill').style.width='100%';
     setTimeout(()=> closeSheet('sheetUpload'), 300);
-    Sound.upload(); toast('Uploaded to your cloud');
+    Sound.upload(); toast('Uploaded to your cloud — saved in '+state.path);
   } catch(err){
     closeSheet('sheetUpload');
     toast('Upload failed: '+err.message); Sound.error();
@@ -953,58 +1104,113 @@ document.getElementById('fileInputHidden').onchange = async (e)=>{
 };
 
 /* ---------------------------------------------------------------------
-   Puter.js — auth + AI organizer
+   Puter.js — auth + AI (one-tap organize, and free-form chat commands)
    --------------------------------------------------------------------- */
 let puterUserCache = null;
-function puterSignedIn(){
-  try { return !!(window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn()); }
-  catch(e){ return false; }
+function puterSignedIn(){ try { return !!(window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn()); } catch(e){ return false; } }
+
+async function callAi(prompt){
+  const res = await puter.ai.chat(prompt);
+  let text = (res && res.message && res.message.content) || (typeof res==='string'? res : JSON.stringify(res));
+  return text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
 }
 
-async function runAiOrganize(){
-  Sound.tap();
-  if (!window.puter || !puter.ai){ toast('AI service failed to load'); Sound.error(); return; }
-  if (!puterSignedIn()){
-    try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); }
-    catch(e){ toast('Sign in to use the AI organizer'); return; }
-  }
-  const btn = document.getElementById('btnOrganize');
-  const label = document.getElementById('organizeLabel');
-  btn.classList.add('busy'); label.innerHTML = '<span class="spin">✦</span> Thinking…';
-
+async function aiAutoOrganize(){
   const flat = state.index.files.map(f=>({ id: f.id, name: f.name, path: f.path, mime: f.mime, size: f.size }));
-  if (!flat.length){ toast('Nothing to organize yet — upload some files first'); btn.classList.remove('busy'); label.textContent='One-tap Organize'; return; }
-
+  if (!flat.length){ toast('Nothing to organize yet — upload some files first'); return; }
   const prompt = `You are a tidy file-organizing assistant. Given this JSON array of files (id, name, path, mime, size),
 propose a cleaner folder structure grouped by file type/topic using short, friendly folder names starting with "/".
 Reply with ONLY a JSON array, no prose, no markdown fences, in this exact shape:
 [{"id":"<file id>","to":"/NewFolder/Sub"}, ...]
 Only include files whose folder should change. Files: ${JSON.stringify(flat)}`;
+  const text = await callAi(prompt);
+  const plan = JSON.parse(text);
+  plan.forEach(mv=>{
+    const f = state.index.files.find(x=>x.id===mv.id);
+    if (!f || !mv.to) return;
+    const to = normPath(mv.to);
+    if (to !== '/' && !state.index.folders.includes(to)) state.index.folders.push(to);
+    f.path = to;
+  });
+  await persistIndex();
+}
+
+function pushChat(role, text){ state.chatLog.push({role, text}); if (state.chatLog.length>40) state.chatLog.shift(); }
+function popLastAssistant(){ if (state.chatLog.length && state.chatLog[state.chatLog.length-1].role==='assistant') state.chatLog.pop(); }
+function renderChatLog(){
+  const log = document.getElementById('aiChatLog');
+  if (!log) return;
+  log.innerHTML = state.chatLog.length ? state.chatLog.map(m=> `<div class="chat-msg ${m.role}">${escapeHtml(m.text)}</div>`).join('')
+    : `<div class="chat-msg assistant">Hi! Ask me to create, rename, move, delete, or organize your files — or ask me to analyze your storage.</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function runAiChatCommand(rawText){
+  const text = (rawText||'').trim();
+  if (!text) return;
+  const inputEl = document.getElementById('aiChatInput');
+  if (inputEl) inputEl.value = '';
+  pushChat('user', text);
+  renderChatLog();
+
+  if (!window.puter || !puter.ai){ pushChat('assistant', 'The AI service failed to load. Please retry in a moment.'); renderChatLog(); return; }
+  if (!puterSignedIn()){
+    try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); }
+    catch(e){ pushChat('assistant', "You'll need to sign in with Puter first — tap the button above."); renderChatLog(); return; }
+  }
+
+  pushChat('assistant', '…thinking…'); renderChatLog();
+
+  const flat = state.index.files.map(f=>({ id: f.id, name: f.name, path: f.path, mime: f.mime, size: f.size }));
+  const folders = state.index.folders;
+  const prompt = `You are a file-management assistant for a personal cloud drive.
+Current folders: ${JSON.stringify(folders)}
+Current files: ${JSON.stringify(flat)}
+Current folder the user is viewing: "${state.path}"
+User instruction: "${text}"
+
+Decide what to do and reply with ONLY strict JSON, no prose, no markdown fences, in this exact shape:
+{"reply":"short friendly one-sentence confirmation for the user","actions":[ ... ]}
+Each action is one of:
+{"type":"create_folder","path":"/X"}
+{"type":"create_file","path":"/X","name":"file.txt","content":"..."}
+{"type":"rename_file","id":"...","name":"newname.ext"}
+{"type":"move_file","id":"...","to":"/X"}
+{"type":"delete_file","id":"..."}
+{"type":"rename_folder","path":"/X","name":"newname"}
+{"type":"move_folder","path":"/X","to":"/Y"}
+{"type":"delete_folder","path":"/X"}
+{"type":"organize"}
+If the instruction is just a question or asks for analysis with no changes needed, return an empty actions array and put your analysis/answer in "reply". Only reference file ids that exist in the list above. If a path in "create_file" is omitted, use the current folder.`;
 
   try {
-    const res = await puter.ai.chat(prompt);
-    let text = (res && res.message && res.message.content) || (typeof res==='string'? res : JSON.stringify(res));
-    text = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-    const plan = JSON.parse(text);
-    let moved = 0;
-    plan.forEach(mv=>{
-      const f = state.index.files.find(x=>x.id===mv.id);
-      if (!f || !mv.to) return;
-      const to = normPath(mv.to);
-      if (to !== '/' && !state.index.folders.includes(to)) state.index.folders.push(to);
-      f.path = to; moved++;
-    });
-    await persistIndex();
-    Sound.organize();
-    toast(moved ? `Organized ${moved} file${moved===1?'':'s'} into tidy folders ✨` : 'Your files were already tidy!');
+    const out = await callAi(prompt);
+    const plan = JSON.parse(out);
+    popLastAssistant();
+    let changed = false;
+    for (const a of (plan.actions||[])){
+      try {
+        if (a.type==='create_folder'){ await opCreateFolder(a.path); changed=true; }
+        else if (a.type==='create_file'){ await opCreateTextFile(normPath(a.path||state.path), a.name||'file.txt', a.content||''); changed=true; }
+        else if (a.type==='rename_file'){ await opRenameFile(a.id, a.name); changed=true; }
+        else if (a.type==='move_file'){ await opMoveFile(a.id, a.to); changed=true; }
+        else if (a.type==='delete_file'){ await opDeleteFile(a.id); changed=true; }
+        else if (a.type==='rename_folder'){ await opRenameFolder(a.path, a.name); changed=true; }
+        else if (a.type==='move_folder'){ await opMoveFolderPath(a.path, joinPath(a.to, baseName(a.path))); changed=true; }
+        else if (a.type==='delete_folder'){ await opDeleteFolder(a.path); changed=true; }
+        else if (a.type==='organize'){ await aiAutoOrganize(); changed=true; }
+      } catch(actErr){ /* skip this single action, keep going */ }
+    }
+    pushChat('assistant', plan.reply || 'Done!');
+    if (changed) Sound.success();
   } catch(e){
-    toast('AI organizer had trouble — try again in a moment');
+    popLastAssistant();
+    pushChat('assistant', "Sorry, I couldn't complete that — try rephrasing.");
     Sound.error();
   }
-  btn.classList.remove('busy'); label.textContent = 'One-tap Organize';
+  renderChatLog();
   render();
 }
-document.getElementById('btnOrganize').onclick = runAiOrganize;
 
 /* ---------------------------------------------------------------------
    Search + tabs
