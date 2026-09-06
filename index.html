@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RiNi Cloud OS</title>
+<meta name="theme-color" content="#7c3aed">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="./config.js"></script>
+<script src="https://js.puter.com/v2/"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap');
+
+:root{
+  --bg1:#eee6fb; --bg2:#fdeadb;
+  --ink:#372a6b; --ink-soft:#6a5cab;
+  --card-mint:#d7f2df; --card-mint-ink:#1f6b3f;
+  --card-sky:#d7e7fb; --card-sky-ink:#2456a3;
+  --card-butter:#faf1c6; --card-butter-ink:#8a6a12;
+  --card-blush:#fbe0ea; --card-blush-ink:#a13a67;
+  --card-lilac:#e7defb; --card-lilac-ink:#5b3ea3;
+  --card-peach:#fde1d1; --card-peach-ink:#b1591f;
+  --white-card: rgba(255,255,255,.72);
+  --shadow: 0 10px 0 rgba(90,70,150,.10), 0 14px 24px rgba(90,70,150,.14);
+  --shadow-sm: 0 6px 0 rgba(90,70,150,.10), 0 8px 14px rgba(90,70,150,.12);
+  --radius-xl:32px; --radius-lg:26px; --radius-md:20px; --radius-pill:999px;
+  --accent:#8a6bf0; --danger:#e2637a;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; font-family:'Fredoka',sans-serif; color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, #fff6e9 0%, transparent 40%),
+    radial-gradient(circle at 90% 85%, #e6f7ff 0%, transparent 45%),
+    linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+  min-height:100vh; -webkit-tap-highlight-color:transparent; overscroll-behavior:contain;
+}
+#app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:96px; }
+
+.topbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:22px 20px 8px; }
+.icon-btn{ width:52px;height:52px; border-radius:var(--radius-pill); background:var(--white-card); border:none; display:flex;align-items:center;justify-content:center; box-shadow:var(--shadow-sm); cursor:pointer; color:var(--ink); flex:none; transition:transform .12s ease; }
+.icon-btn:active{ transform:scale(.9); }
+.icon-btn.small{ width:44px;height:44px; }
+.icon-btn:disabled{ opacity:.35; }
+.title-wrap{ flex:1; min-width:0; }
+h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px; line-height:1.05; margin:0; overflow-wrap:anywhere; }
+.crumbs{ display:flex; gap:6px; margin-top:8px; overflow-x:auto; scrollbar-width:none; }
+.crumbs::-webkit-scrollbar{ display:none; }
+.crumb{ font-size:13px; color:var(--ink-soft); background:var(--white-card); padding:4px 12px; border-radius:var(--radius-pill); white-space:nowrap; cursor:pointer; font-weight:500; border:none; font-family:'Fredoka'; }
+.crumb.current{ background:var(--accent); color:#fff; font-weight:600; }
+.top-actions{ display:flex; gap:10px; }
+
+.search-bar{ margin:14px 20px 0; display:flex; align-items:center; gap:12px; background:var(--card-butter); padding:16px 20px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); color:var(--card-butter-ink); }
+.search-bar input{ border:none;background:transparent;outline:none; font-family:'Fredoka';font-size:16px;font-weight:500; color:var(--ink);width:100%; }
+.search-bar input::placeholder{ color:#b8a568; }
+
+.storage-card{ margin:16px 20px 0; background:var(--card-mint); border-radius:var(--radius-xl); padding:20px 22px; box-shadow:var(--shadow); color:var(--card-mint-ink); }
+.storage-top{ display:flex; align-items:center; gap:16px; }
+.storage-icon{ width:56px;height:56px;flex:none; border-radius:18px; background:rgba(255,255,255,.6); display:flex;align-items:center;justify-content:center; }
+.storage-title{ font-family:'Baloo 2'; font-weight:700; font-size:21px; }
+.storage-sub{ font-size:13px; opacity:.75; font-weight:500; margin-top:2px; }
+.storage-bar-track{ margin-top:16px; height:14px;border-radius:var(--radius-pill); background:rgba(255,255,255,.55); overflow:hidden; }
+.storage-bar-fill{ height:100%; background:linear-gradient(90deg,#7cd8a0,#4fb37f); border-radius:var(--radius-pill); width:4%; transition:width .4s ease; }
+.storage-meta{ display:flex;justify-content:space-between;align-items:center; margin-top:12px; font-size:14px; font-weight:500; }
+.chip{ background:rgba(255,255,255,.7); padding:5px 14px;border-radius:var(--radius-pill); font-size:13px;font-weight:600; }
+.type-breakdown{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.type-pill{ font-size:12px; font-weight:600; padding:6px 12px; border-radius:var(--radius-pill); background:rgba(255,255,255,.55); }
+
+.section-label{ font-family:'Baloo 2'; font-weight:700; font-size:21px; margin:24px 20px 2px; color:var(--ink); display:flex; align-items:center; gap:8px; }
+.section-label .twinkle{ font-size:15px; opacity:.7; }
+
+.folder-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:14px 20px 0; }
+.folder-card{ border-radius:var(--radius-lg); padding:16px 8px 14px; text-align:center; box-shadow:var(--shadow-sm); cursor:pointer; position:relative; border:none; font-family:'Fredoka'; transition:transform .12s ease; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.folder-card:active{ transform:scale(.94); }
+.folder-glyph{ width:50px;height:50px; border-radius:15px; background:rgba(255,255,255,.55); display:flex;align-items:center;justify-content:center; }
+.folder-name{ font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.folder-meta{ font-size:10.5px; opacity:.7; font-weight:500; }
+.folder-card.new{ background:var(--white-card); color:var(--ink-soft); border:2px dashed rgba(90,70,150,.25); box-shadow:none; }
+.c-mint{ background:var(--card-mint); color:var(--card-mint-ink); }
+.c-sky{ background:var(--card-sky); color:var(--card-sky-ink); }
+.c-butter{ background:var(--card-butter); color:var(--card-butter-ink); }
+.c-blush{ background:var(--card-blush); color:var(--card-blush-ink); }
+.c-lilac{ background:var(--card-lilac); color:var(--card-lilac-ink); }
+.c-peach{ background:var(--card-peach); color:var(--card-peach-ink); }
+
+.file-list{ margin:14px 20px 0; display:flex; flex-direction:column; gap:10px; }
+.file-row{ display:flex; align-items:center; gap:14px; background:var(--white-card); padding:14px 16px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); cursor:pointer; }
+.file-row .folder-glyph{ width:42px;height:42px;border-radius:13px; }
+.file-info{ flex:1; min-width:0; }
+.file-name{ font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-meta{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+.file-more{ width:36px;height:36px;border-radius:var(--radius-pill); border:none; background:rgba(120,100,190,.12); color:var(--ink); display:flex;align-items:center;justify-content:center; cursor:pointer; flex:none; }
+.empty-state{ margin:40px 20px; text-align:center; color:var(--ink-soft); }
+.empty-state .big{ font-size:40px; }
+.empty-state p{ font-weight:500; }
+
+.fab-organize{ position:fixed; left:50%; transform:translateX(-50%); bottom:104px; max-width:440px; width:calc(100% - 40px); background:linear-gradient(95deg,#8a6bf0,#c084f5); color:#fff; border:none; border-radius:var(--radius-pill); padding:16px 22px; font-family:'Baloo 2'; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 10px 0 rgba(90,50,180,.18), 0 16px 26px rgba(120,80,220,.35); cursor:pointer; z-index:40; }
+.fab-organize:active{ transform:translateX(-50%) scale(.96); }
+.fab-organize.busy{ opacity:.7; }
+
+.bottom-nav{ position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto; background:var(--white-card); backdrop-filter:blur(10px); border-radius:28px 28px 0 0; display:flex; justify-content:space-around; padding:12px 10px calc(10px + env(safe-area-inset-bottom)); box-shadow:0 -6px 20px rgba(90,70,150,.14); z-index:50; }
+.nav-btn{ background:none;border:none; font-family:'Fredoka'; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer; }
+.nav-btn.active{ color:var(--accent); }
+.nav-underline{ width:22px;height:3px;border-radius:3px; background:transparent; margin-top:1px; }
+.nav-btn.active .nav-underline{ background:var(--accent); }
+
+.overlay{ position:fixed; inset:0; background:rgba(50,35,90,.35); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .18s ease; }
+.overlay.show{ opacity:1; pointer-events:auto; }
+.sheet{ background:#fffaf3; width:100%; max-width:480px; border-radius:30px 30px 0 0; padding:22px 22px calc(26px + env(safe-area-inset-bottom)); transform:translateY(30px); transition:transform .2s ease; max-height:82vh; overflow-y:auto; }
+.overlay.show .sheet{ transform:translateY(0); }
+.sheet h2{ font-family:'Baloo 2'; font-size:21px; margin:0 0 14px; }
+.sheet-handle{ width:44px;height:5px;border-radius:4px;background:#e6dcf7; margin:0 auto 16px; }
+.field{ width:100%; padding:14px 16px; border-radius:16px; border:2px solid #f0e6ff; font-family:'Fredoka'; font-size:16px; background:#fff; margin-bottom:12px; outline:none; }
+.field:focus{ border-color:var(--accent); }
+textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace; font-size:14px; }
+.btn{ width:100%; padding:15px; border:none; border-radius:16px; font-family:'Baloo 2'; font-weight:700; font-size:16px; cursor:pointer; background:var(--accent); color:#fff; box-shadow:0 6px 0 rgba(90,50,180,.25); margin-top:4px; }
+.btn:active{ transform:translateY(3px); box-shadow:none; }
+.btn.secondary{ background:#f0eaff; color:var(--ink); box-shadow:0 6px 0 rgba(150,130,220,.15); }
+.btn.danger{ background:var(--danger); box-shadow:0 6px 0 rgba(180,50,80,.25); }
+.btn:disabled{ opacity:.5; }
+.action-row{ display:flex; flex-direction:column; gap:6px; }
+.action-item{ display:flex; align-items:center; gap:14px; padding:14px 6px; border-radius:14px; cursor:pointer; font-weight:600; background:none; border:none; font-family:'Fredoka'; font-size:15px; text-align:left; color:var(--ink); width:100%; }
+.action-item:active{ background:#f4eeff; }
+.action-item.danger-text{ color:var(--danger); }
+
+.me-card{ margin:16px 20px 0; padding:22px; border-radius:var(--radius-xl); background:var(--card-lilac); color:var(--card-lilac-ink); box-shadow:var(--shadow); }
+.me-row{ display:flex; align-items:center; gap:14px; }
+.me-avatar{ width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.55); display:flex;align-items:center;justify-content:center; flex:none; }
+.me-name{ font-family:'Baloo 2'; font-weight:700; font-size:18px; }
+.me-sub{ font-size:13px; opacity:.75; font-weight:500; }
+.status-dot{ width:9px;height:9px;border-radius:50%; display:inline-block; margin-right:6px; }
+.dot-off{ background:#c98a8a; }
+.dot-on{ background:#57b17e; }
+
+.ai-panel{ margin:16px 20px 0; padding:20px; border-radius:var(--radius-xl); background:linear-gradient(150deg,#efe6ff,#fff0e0); box-shadow:var(--shadow-sm); }
+.ai-panel h3{ font-family:'Baloo 2'; margin:0 0 6px; font-size:17px; }
+.ai-panel p{ font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4; }
+
+.settings-list{ margin:16px 20px 40px; display:flex; flex-direction:column; gap:10px; }
+.settings-item{ display:flex; align-items:center; justify-content:space-between; background:var(--white-card); padding:16px 18px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); font-weight:600; cursor:pointer; }
+.settings-item small{ font-weight:500; color:var(--ink-soft); display:block; margin-top:2px; }
+
+#toast{ position:fixed; bottom:180px; left:50%; transform:translateX(-50%) translateY(20px); background:#372a6b; color:#fff; padding:12px 22px; border-radius:var(--radius-pill); font-weight:600; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; white-space:nowrap; max-width:88%; text-align:center; }
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.hidden{ display:none !important; }
+.progress-line{ height:8px;border-radius:8px;background:#f0e6ff;overflow:hidden;margin-top:10px; }
+.progress-line > div{ height:100%; width:0%; background:var(--accent); transition:width .15s ease; }
+.spin{ animation:spin 1s linear infinite; display:inline-block; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <div class="topbar">
+    <button class="icon-btn" id="btnBack" title="Back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="title-wrap">
+      <h1 class="app-title" id="appTitle">RiNi Cloud</h1>
+      <div class="crumbs" id="crumbs"></div>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="btnMenu" title="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <div class="search-bar">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <input id="searchInput" placeholder="Search files &amp; folders">
+  </div>
+
+  <!-- ============ MAIN VIEWS ============ -->
+  <div id="view-home">
+    <div class="storage-card">
+      <div class="storage-top">
+        <div class="storage-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M6 18a4 4 0 0 1-.7-7.94A5.5 5.5 0 0 1 16.3 8.05 4.5 4.5 0 0 1 17.5 17H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="storage-title">Cloud Storage</div>
+          <div class="storage-sub" id="storageSub">Loading your files…</div>
+        </div>
+      </div>
+      <div class="storage-bar-track"><div class="storage-bar-fill" id="storageBar"></div></div>
+      <div class="storage-meta">
+        <span id="storageUsedText">0 MB used</span>
+        <span class="chip">Unlimited plan</span>
+      </div>
+      <div class="type-breakdown" id="typeBreakdown"></div>
+    </div>
+
+    <div class="section-label">Folders <span class="twinkle">✦</span></div>
+    <div class="folder-grid" id="folderGrid"></div>
+
+    <div class="section-label hidden" id="filesLabel">Files</div>
+    <div class="file-list" id="fileList"></div>
+
+    <div class="empty-state hidden" id="emptyState">
+      <div class="big">☁️</div>
+      <p>Nothing here yet. Upload a file or make a folder to get started.</p>
+    </div>
+  </div>
+
+  <div id="view-categories" class="hidden"></div>
+  <div id="view-clean" class="hidden"></div>
+  <div id="view-me" class="hidden"></div>
+
+  <!-- ============ ORGANIZE FAB ============ -->
+  <button class="fab-organize" id="btnOrganize">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4L12 3z" fill="currentColor"/><path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z" fill="currentColor"/></svg>
+    <span id="organizeLabel">One-tap Organize</span>
+  </button>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="home">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+      Home<span class="nav-underline"></span>
+    </button>
+    <button class="nav-btn" data-tab="categories">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg>
+      Categories<span class="nav-underline"></span>
+    </button>
+    <button class="nav-btn" data-tab="clean">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M5 4l6 6M14 6l4-4M8 14l-4 6 6-4M13 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Clean<span class="nav-underline"></span>
+    </button>
+    <button class="nav-btn" data-tab="me">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="2.1"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+      Me<span class="nav-underline"></span>
+    </button>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- ============ SHEET: quick menu ============ -->
+  <div class="overlay" id="sheetMenu">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2>Quick actions</h2>
+      <div class="action-row">
+        <button class="action-item" data-act="new-folder">📁 New folder</button>
+        <button class="action-item" data-act="upload">⬆️ Upload file</button>
+        <button class="action-item" data-act="new-note">📝 New text note</button>
+        <button class="action-item" data-act="refresh">🔄 Refresh from cloud</button>
+        <button class="action-item" data-act="about">ℹ️ About this app</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SHEET: item actions ============ -->
+  <div class="overlay" id="sheetItem">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 id="itemSheetTitle">Item</h2>
+      <div class="action-row" id="itemActionRow"></div>
+    </div>
+  </div>
+
+  <!-- ============ SHEET: text input (rename / new folder / move) ============ -->
+  <div class="overlay" id="sheetInput">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 id="inputSheetTitle">Rename</h2>
+      <input class="field" id="inputSheetField" placeholder="">
+      <button class="btn" id="inputSheetConfirm">Save</button>
+      <button class="btn secondary" id="inputSheetCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ SHEET: text editor ============ -->
+  <div class="overlay" id="sheetEditor">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 id="editorTitle">Edit note</h2>
+      <textarea class="field" id="editorField"></textarea>
+      <button class="btn" id="editorSave">Save to cloud</button>
+      <button class="btn secondary" id="editorCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ SHEET: upload progress ============ -->
+  <div class="overlay" id="sheetUpload">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2>Uploading…</h2>
+      <div id="uploadFileName" style="font-weight:600;">file.name</div>
+      <div class="progress-line"><div id="uploadProgressFill"></div></div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInputHidden" class="hidden">
+</div>
+
+<script>
+/* ======================================================================
+   RiNi Cloud OS — app logic
+   A cartoon-cloud file manager whose "disk" is a Telegram channel.
+   The channel's PINNED message holds index.json — the single source of
+   truth for the whole virtual filesystem (folders/files/paths/sizes).
+   ====================================================================== */
+const CFG = window.APP_CONFIG;
+const API = `https://api.telegram.org/bot${CFG.TELEGRAM_BOT_TOKEN}`;
+const FILEAPI = `https://api.telegram.org/file/bot${CFG.TELEGRAM_BOT_TOKEN}`;
+const CHAT_ID = CFG.TELEGRAM_CHAT_ID;
+
+let state = {
+  index: { folders: ["/"], files: [], indexMessageId: null },
+  path: "/",
+  tab: "home",
+  search: "",
+  loaded: false,
+};
+
+/* ---------------------------------------------------------------------
+   Sound effects — synthesized with WebAudio, no asset files needed.
+   --------------------------------------------------------------------- */
+const Sound = (() => {
+  let ctx;
+  function ac(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
+  function tone(freq, start, dur, type='sine', gainPeak=0.18, glideTo=null){
+    const c = ac();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, start+dur);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(gainPeak, start+0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start+dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(start); osc.stop(start+dur+0.02);
+  }
+  return {
+    tap(){ const c=ac(); tone(520, c.currentTime, 0.08, 'triangle', 0.12); },
+    success(){ // long bubbly rising arpeggio
+      const c=ac(); const t=c.currentTime;
+      [523,659,784,988,1175].forEach((f,i)=> tone(f, t+i*0.08, 0.22, 'sine', 0.16, f*1.15));
+    },
+    organize(){ // longer funny "magic sparkle" sweep
+      const c=ac(); const t=c.currentTime;
+      const notes=[392,523,659,784,988,784,988,1319];
+      notes.forEach((f,i)=> tone(f, t+i*0.09, 0.28, i%2?'triangle':'sine', 0.15, f*1.3));
+    },
+    delete(){ // silly descending "boing"
+      const c=ac(); const t=c.currentTime;
+      tone(420, t, 0.32, 'sawtooth', 0.14, 90);
+    },
+    error(){
+      const c=ac(); const t=c.currentTime;
+      tone(180, t, 0.14, 'square', 0.12);
+      tone(140, t+0.15, 0.22, 'square', 0.12);
+    },
+    upload(){
+      const c=ac(); const t=c.currentTime;
+      [300,500,760].forEach((f,i)=> tone(f, t+i*0.06, 0.16, 'triangle', 0.14, f*1.1));
+    }
+  };
+})();
+
+/* ---------------------------------------------------------------------
+   Telegram storage engine
+   --------------------------------------------------------------------- */
+async function tg(method, formOrParams){
+  const url = `${API}/${method}`;
+  let opts;
+  if (formOrParams instanceof FormData){ opts = { method:'POST', body: formOrParams }; }
+  else { opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formOrParams||{}) }; }
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.description || `${method} failed`);
+  return data.result;
+}
+
+function loadCache(){
+  try { const raw = localStorage.getItem(CFG.CACHE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return null;
+}
+function saveCache(idx){
+  try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(idx)); } catch(e){}
+}
+
+async function fetchIndexFromChannel(){
+  const chat = await tg('getChat', { chat_id: CHAT_ID });
+  const pinned = chat.pinned_message;
+  if (pinned && pinned.document){
+    const file = await tg('getFile', { file_id: pinned.document.file_id });
+    const resp = await fetch(`${FILEAPI}/${file.file_path}`);
+    const json = await resp.json();
+    json.indexMessageId = pinned.message_id;
+    return json;
+  }
+  return null;
+}
+
+async function createFreshIndex(){
+  const fresh = { folders:["/"], files:[] };
+  const form = new FormData();
+  form.append('chat_id', CHAT_ID);
+  form.append('document', new Blob([JSON.stringify(fresh)], {type:'application/json'}), 'index.json');
+  form.append('caption', '📇 RiNi Cloud index — do not delete this message');
+  const sent = await tg('sendDocument', form);
+  await tg('pinChatMessage', { chat_id: CHAT_ID, message_id: sent.message_id, disable_notification: true });
+  fresh.indexMessageId = sent.message_id;
+  return fresh;
+}
+
+async function persistIndex(){
+  const idx = state.index;
+  saveCache(idx);
+  const payload = { folders: idx.folders, files: idx.files };
+  const form = new FormData();
+  form.append('chat_id', CHAT_ID);
+  form.append('message_id', idx.indexMessageId);
+  form.append('media', JSON.stringify({ type:'document', media:'attach://idxfile', caption:'📇 RiNi Cloud index — do not delete this message' }));
+  form.append('idxfile', new Blob([JSON.stringify(payload)], {type:'application/json'}), 'index.json');
+  try {
+    await tg('editMessageMedia', form);
+  } catch(e){
+    // If the pinned message was manually deleted from Telegram, recreate it.
+    const fresh = await createFreshIndex();
+    state.index.indexMessageId = fresh.indexMessageId;
+    saveCache(state.index);
+  }
+}
+
+async function bootIndex(){
+  const cached = loadCache();
+  if (cached) { state.index = cached; render(); }
+  try {
+    const remote = await fetchIndexFromChannel();
+    if (remote) { state.index = remote; }
+    else { state.index = await createFreshIndex(); }
+  } catch(e){
+    if (!cached){ toast("Couldn't reach your Telegram storage. Check the bot token / channel setup."); Sound.error(); }
+  }
+  state.loaded = true;
+  saveCache(state.index);
+  render();
+}
+
+/* ---------------------------------------------------------------------
+   Virtual filesystem helpers
+   --------------------------------------------------------------------- */
+function normPath(p){
+  if (!p.startsWith('/')) p = '/'+p;
+  if (p.length>1 && p.endsWith('/')) p = p.slice(0,-1);
+  return p;
+}
+function joinPath(base, name){ return normPath(base === '/' ? '/'+name : base+'/'+name); }
+function parentPath(p){
+  if (p === '/') return '/';
+  const parts = p.split('/'); parts.pop();
+  const parent = parts.join('/');
+  return parent === '' ? '/' : parent;
+}
+function baseName(p){ const parts = p.split('/'); return parts[parts.length-1] || '/'; }
+
+function directSubfolders(path){
+  return state.index.folders.filter(f => f !== '/' && parentPath(f) === path);
+}
+function filesIn(path){
+  return state.index.files.filter(f => f.path === path);
+}
+function folderStats(path){
+  // recursive size + count for a folder (used for folder-card meta)
+  const all = state.index.files.filter(f => f.path === path || f.path.startsWith(path === '/' ? '/' : path+'/'));
+  const size = all.reduce((s,f)=>s+f.size,0);
+  return { count: all.length, size };
+}
+function fmtSize(bytes){
+  if (bytes < 1024) return bytes+' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  if (bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1)+' MB';
+  return (bytes/1024/1024/1024).toFixed(2)+' GB';
+}
+function fileGlyph(mime, name){
+  const ext = (name.split('.').pop()||'').toLowerCase();
+  if ((mime||'').startsWith('image/')) return {emoji:'🖼️', cls:'c-mint'};
+  if ((mime||'').startsWith('video/')) return {emoji:'🎬', cls:'c-sky'};
+  if ((mime||'').startsWith('audio/')) return {emoji:'🎵', cls:'c-peach'};
+  if (['zip','rar','7z','tar','gz'].includes(ext)) return {emoji:'🗜️', cls:'c-lilac'};
+  if (['pdf'].includes(ext)) return {emoji:'📕', cls:'c-blush'};
+  if (['doc','docx','txt','md','note'].includes(ext)) return {emoji:'📄', cls:'c-butter'};
+  return {emoji:'📦', cls:'c-sky'};
+}
+function fileCategory(mime, name){
+  const ext = (name.split('.').pop()||'').toLowerCase();
+  if ((mime||'').startsWith('image/')) return 'Images';
+  if ((mime||'').startsWith('video/')) return 'Videos';
+  if ((mime||'').startsWith('audio/')) return 'Audio';
+  if (['zip','rar','7z','tar','gz'].includes(ext)) return 'Archives';
+  if (['pdf','doc','docx','txt','md','note'].includes(ext)) return 'Documents';
+  return 'Other';
+}
+
+/* ---------------------------------------------------------------------
+   Rendering
+   --------------------------------------------------------------------- */
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+
+function renderCrumbs(){
+  const crumbs = document.getElementById('crumbs');
+  const parts = state.path === '/' ? [] : state.path.split('/').filter(Boolean);
+  let acc = '';
+  let html = `<button class="crumb ${state.path==='/'?'current':''}" data-p="/">Home</button>`;
+  parts.forEach((p)=>{
+    acc += '/'+p;
+    html += `<button class="crumb ${acc===state.path?'current':''}" data-p="${acc}">${p}</button>`;
+  });
+  crumbs.innerHTML = html;
+  crumbs.querySelectorAll('.crumb').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.path = b.dataset.p; render(); });
+  document.getElementById('btnBack').disabled = state.path === '/';
+}
+
+function renderStorage(){
+  const allFiles = state.index.files;
+  const totalBytes = allFiles.reduce((s,f)=>s+f.size,0);
+  document.getElementById('storageUsedText').textContent = fmtSize(totalBytes)+' used';
+  document.getElementById('storageSub').textContent = `${allFiles.length} file${allFiles.length===1?'':'s'} • ${state.index.folders.length-1} folder${state.index.folders.length-1===1?'':'s'}`;
+  // visual fill just gives a gentle sense of activity — plan is unlimited, no hard cap
+  const pct = Math.min(96, 6 + Math.log2(1+totalBytes/1e6)*6);
+  document.getElementById('storageBar').style.width = pct+'%';
+
+  const byCat = {};
+  allFiles.forEach(f=>{ const c=fileCategory(f.mime,f.name); byCat[c]=(byCat[c]||0)+f.size; });
+  const wrap = document.getElementById('typeBreakdown');
+  wrap.innerHTML = Object.keys(byCat).length ? Object.entries(byCat).map(([k,v])=>`<span class="type-pill">${k} · ${fmtSize(v)}</span>`).join('') : `<span class="type-pill">No files yet</span>`;
+}
+
+function folderCardHTML(path, colorClass){
+  const name = baseName(path);
+  const stats = folderStats(path);
+  return `
+    <button class="folder-card ${colorClass}" data-folder="${path}">
+      <div class="folder-glyph">📁</div>
+      <div class="folder-name">${name}</div>
+      <div class="folder-meta">${stats.count} item${stats.count===1?'':'s'} • ${fmtSize(stats.size)}</div>
+    </button>`;
+}
+
+const PALETTE = ['c-mint','c-sky','c-butter','c-blush','c-lilac','c-peach'];
+
+function renderHome(){
+  renderCrumbs();
+  renderStorage();
+
+  const q = state.search.trim().toLowerCase();
+  const grid = document.getElementById('folderGrid');
+  const fileListEl = document.getElementById('fileList');
+  const filesLabel = document.getElementById('filesLabel');
+  const emptyState = document.getElementById('emptyState');
+
+  let subfolders = directSubfolders(state.path);
+  let files = filesIn(state.path);
+
+  if (q){
+    // search across the WHOLE tree by name
+    subfolders = state.index.folders.filter(f=> f!=='/' && baseName(f).toLowerCase().includes(q));
+    files = state.index.files.filter(f=> f.name.toLowerCase().includes(q));
+  }
+
+  grid.innerHTML = subfolders.map((f,i)=> folderCardHTML(f, PALETTE[i%PALETTE.length])).join('') +
+    (q ? '' : `<button class="folder-card new" data-newfolder="1">
+        <div class="folder-glyph">➕</div>
+        <div class="folder-name">New folder</div>
+        <div class="folder-meta">create one</div>
+      </button>`);
+
+  grid.querySelectorAll('[data-folder]').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.path = b.dataset.folder; state.search=''; document.getElementById('searchInput').value=''; render(); });
+  const nf = grid.querySelector('[data-newfolder]');
+  if (nf) nf.onclick = ()=>{ Sound.tap(); openNewFolder(); };
+
+  if (files.length){
+    filesLabel.classList.remove('hidden');
+    fileListEl.innerHTML = files.map(f=>{
+      const g = fileGlyph(f.mime, f.name);
+      return `<div class="file-row" data-fid="${f.id}">
+        <div class="folder-glyph ${g.cls}">${g.emoji}</div>
+        <div class="file-info">
+          <div class="file-name">${f.name}</div>
+          <div class="file-meta">${fmtSize(f.size)}${q? ' • '+f.path : ''}</div>
+        </div>
+        <button class="file-more" data-more="${f.id}">⋮</button>
+      </div>`;
+    }).join('');
+    fileListEl.querySelectorAll('.file-row').forEach(row=>{
+      row.onclick = (e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); };
+    });
+    fileListEl.querySelectorAll('[data-more]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
+  } else {
+    filesLabel.classList.add('hidden');
+    fileListEl.innerHTML = '';
+  }
+
+  emptyState.classList.toggle('hidden', !(subfolders.length===0 && files.length===0));
+}
+
+function renderCategories(){
+  const view = document.getElementById('view-categories');
+  const cats = ['Images','Videos','Audio','Documents','Archives','Other'];
+  const counts = {};
+  cats.forEach(c=> counts[c] = {count:0,size:0});
+  state.index.files.forEach(f=>{ const c=fileCategory(f.mime,f.name); counts[c].count++; counts[c].size+=f.size; });
+
+  view.innerHTML = `
+    <div class="section-label">Categories <span class="twinkle">✦</span></div>
+    <div class="folder-grid" id="catGrid"></div>
+    <div class="section-label hidden" id="catFilesLabel">Files</div>
+    <div class="file-list" id="catFileList"></div>`;
+  const grid = view.querySelector('#catGrid');
+  const glyphs = {Images:'🖼️',Videos:'🎬',Audio:'🎵',Documents:'📄',Archives:'🗜️',Other:'📦'};
+  grid.innerHTML = cats.map((c,i)=> `
+    <button class="folder-card ${PALETTE[i%PALETTE.length]}" data-cat="${c}">
+      <div class="folder-glyph">${glyphs[c]}</div>
+      <div class="folder-name">${c}</div>
+      <div class="folder-meta">${counts[c].count} · ${fmtSize(counts[c].size)}</div>
+    </button>`).join('');
+  grid.querySelectorAll('[data-cat]').forEach(b=> b.onclick=()=>{
+    Sound.tap();
+    const c = b.dataset.cat;
+    const files = state.index.files.filter(f=> fileCategory(f.mime,f.name)===c);
+    const label = view.querySelector('#catFilesLabel');
+    const list = view.querySelector('#catFileList');
+    label.classList.remove('hidden');
+    label.textContent = c;
+    list.innerHTML = files.map(f=>{
+      const g = fileGlyph(f.mime, f.name);
+      return `<div class="file-row" data-fid="${f.id}">
+        <div class="folder-glyph ${g.cls}">${g.emoji}</div>
+        <div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)} • ${f.path}</div></div>
+        <button class="file-more" data-more="${f.id}">⋮</button>
+      </div>`;
+    }).join('') || `<div class="empty-state"><p>No files in this category yet.</p></div>`;
+    list.querySelectorAll('.file-row').forEach(row=> row.onclick=(e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); });
+    list.querySelectorAll('[data-more]').forEach(b2=> b2.onclick=(e)=>{ e.stopPropagation(); openItemSheet(b2.dataset.more); });
+  });
+}
+
+function renderClean(){
+  const view = document.getElementById('view-clean');
+  const files = state.index.files;
+  const large = [...files].sort((a,b)=>b.size-a.size).slice(0,8);
+  const emptyFolders = state.index.folders.filter(f=> f!=='/' && directSubfolders(f).length===0 && filesIn(f).length===0);
+  const totalBytes = files.reduce((s,f)=>s+f.size,0);
+
+  view.innerHTML = `
+    <div class="storage-card">
+      <div class="storage-top">
+        <div class="storage-icon">🧹</div>
+        <div><div class="storage-title">Storage Analysis</div><div class="storage-sub">${files.length} files • ${fmtSize(totalBytes)} total</div></div>
+      </div>
+    </div>
+    <div class="section-label">Largest files</div>
+    <div class="file-list" id="cleanLarge"></div>
+    <div class="section-label">Empty folders</div>
+    <div class="file-list" id="cleanEmptyFolders"></div>
+    <div class="settings-list">
+      <div class="settings-item" id="btnClearCache">Clear local cache<small>Re-download the index from your channel next launch</small></div>
+    </div>`;
+
+  const largeEl = view.querySelector('#cleanLarge');
+  largeEl.innerHTML = large.length ? large.map(f=>{
+    const g = fileGlyph(f.mime,f.name);
+    return `<div class="file-row" data-fid="${f.id}"><div class="folder-glyph ${g.cls}">${g.emoji}</div><div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)} • ${f.path}</div></div><button class="file-more" data-more="${f.id}">⋮</button></div>`;
+  }).join('') : `<div class="empty-state"><p>No files yet.</p></div>`;
+  largeEl.querySelectorAll('.file-row').forEach(row=> row.onclick=(e)=>{ if(e.target.closest('.file-more')) return; openItemSheet(row.dataset.fid); });
+  largeEl.querySelectorAll('[data-more]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
+
+  const efEl = view.querySelector('#cleanEmptyFolders');
+  efEl.innerHTML = emptyFolders.length ? emptyFolders.map(f=> `
+    <div class="file-row"><div class="folder-glyph c-lilac">📁</div><div class="file-info"><div class="file-name">${f}</div><div class="file-meta">empty</div></div>
+    <button class="file-more" data-delfolder="${f}">🗑️</button></div>`).join('') : `<div class="empty-state"><p>No empty folders. Tidy!</p></div>`;
+  efEl.querySelectorAll('[data-delfolder]').forEach(b=> b.onclick=async()=>{
+    state.index.folders = state.index.folders.filter(f=> f!==b.dataset.delfolder);
+    await persistIndex(); Sound.delete(); toast('Empty folder removed'); render();
+  });
+
+  view.querySelector('#btnClearCache').onclick = ()=>{
+    localStorage.removeItem(CFG.CACHE_KEY);
+    toast('Local cache cleared'); Sound.tap();
+  };
+}
+
+function renderMe(){
+  const view = document.getElementById('view-me');
+  const signedIn = puterSignedIn();
+  view.innerHTML = `
+    <div class="me-card">
+      <div class="me-row">
+        <div class="me-avatar">👤</div>
+        <div>
+          <div class="me-name">${signedIn ? (puterUserCache?.username || 'Signed in') : 'Not signed in'}</div>
+          <div class="me-sub"><span class="status-dot ${signedIn?'dot-on':'dot-off'}"></span>${signedIn ? 'Puter account connected' : 'Sign in to unlock AI tools'}</div>
+        </div>
+      </div>
+      <button class="btn" id="btnPuterAuth" style="margin-top:16px;">${signedIn ? 'Sign out of Puter' : 'Sign up / Log in with Puter'}</button>
+    </div>
+
+    <div class="ai-panel">
+      <h3>🤖 AI File Organizer</h3>
+      <p>${signedIn ? 'Let AI look at your files and sort them into tidy folders automatically.' : 'Sign in with Puter above to unlock the AI organizer and future AI tools.'}</p>
+      <button class="btn" id="btnAiFromMe" ${signedIn?'':'disabled'}>Organize my files with AI</button>
+    </div>
+
+    <div class="section-label">Settings</div>
+    <div class="settings-list">
+      <div class="settings-item" id="meAbout">About RiNi Cloud OS <small>Version 1.0 • Telegram-backed storage</small></div>
+      <div class="settings-item" id="meChannel">Storage channel <small>Chat ID ••••${String(CHAT_ID).slice(-4)}</small></div>
+      <div class="settings-item" id="meRefresh">Refresh from cloud <small>Re-sync the index now</small></div>
+    </div>`;
+
+  view.querySelector('#btnPuterAuth').onclick = async ()=>{
+    Sound.tap();
+    if (signedIn){ await puter.auth.signOut(); toast('Signed out'); }
+    else { try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); toast('Signed in!'); } catch(e){ toast('Sign-in cancelled'); } }
+    renderMe();
+  };
+  view.querySelector('#btnAiFromMe').onclick = runAiOrganize;
+  view.querySelector('#meRefresh').onclick = async ()=>{ Sound.tap(); await bootIndex(); toast('Synced'); };
+  view.querySelector('#meAbout').onclick = ()=> openMenuAction('about');
+}
+
+function render(){
+  document.getElementById('view-home').classList.toggle('hidden', state.tab!=='home');
+  document.getElementById('view-categories').classList.toggle('hidden', state.tab!=='categories');
+  document.getElementById('view-clean').classList.toggle('hidden', state.tab!=='clean');
+  document.getElementById('view-me').classList.toggle('hidden', state.tab!=='me');
+  document.getElementById('btnOrganize').classList.toggle('hidden', state.tab==='me');
+
+  document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===state.tab));
+
+  if (state.tab==='home') renderHome();
+  else if (state.tab==='categories') renderCategories();
+  else if (state.tab==='clean') renderClean();
+  else if (state.tab==='me') renderMe();
+}
+
+/* ---------------------------------------------------------------------
+   Toast
+   --------------------------------------------------------------------- */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 2400);
+}
+
+/* ---------------------------------------------------------------------
+   Sheets (generic open/close)
+   --------------------------------------------------------------------- */
+function openSheet(id){ document.getElementById(id).classList.add('show'); }
+function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(ov=> ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); }));
+
+/* ---- new folder ---- */
+function openNewFolder(){
+  document.getElementById('inputSheetTitle').textContent = 'New folder';
+  const field = document.getElementById('inputSheetField');
+  field.value=''; field.placeholder = 'Folder name';
+  openSheet('sheetInput');
+  document.getElementById('inputSheetConfirm').onclick = async ()=>{
+    const name = field.value.trim();
+    if (!name) return;
+    const newPath = joinPath(state.path, name);
+    if (!state.index.folders.includes(newPath)) state.index.folders.push(newPath);
+    closeSheet('sheetInput');
+    await persistIndex();
+    Sound.success(); toast('Folder created'); render();
+  };
+  document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+}
+
+/* ---- item action sheet (file) ---- */
+function openItemSheet(fileId){
+  const f = state.index.files.find(x=>x.id===fileId);
+  if (!f) return;
+  document.getElementById('itemSheetTitle').textContent = f.name;
+  const isText = /\.(txt|md|note|json|csv)$/i.test(f.name) || (f.mime||'').startsWith('text/');
+  const row = document.getElementById('itemActionRow');
+  row.innerHTML = `
+    <button class="action-item" data-a="download">⬇️ Download</button>
+    ${isText ? '<button class="action-item" data-a="edit">✏️ Edit content</button>' : ''}
+    <button class="action-item" data-a="rename">🔤 Rename</button>
+    <button class="action-item" data-a="move">📂 Change path / move</button>
+    <button class="action-item danger-text" data-a="delete">🗑️ Delete</button>`;
+  openSheet('sheetItem');
+
+  row.querySelector('[data-a="download"]').onclick = async ()=>{
+    closeSheet('sheetItem');
+    try {
+      const file = await tg('getFile', { file_id: f.fileId });
+      const url = `${FILEAPI}/${file.file_path}`;
+      const a = document.createElement('a'); a.href = url; a.download = f.name; a.target='_blank';
+      document.body.appendChild(a); a.click(); a.remove();
+      Sound.tap();
+    } catch(e){ toast('Could not fetch the download link'); Sound.error(); }
+  };
+
+  const editBtn = row.querySelector('[data-a="edit"]');
+  if (editBtn) editBtn.onclick = async ()=>{
+    closeSheet('sheetItem');
+    try {
+      const file = await tg('getFile', { file_id: f.fileId });
+      const text = await (await fetch(`${FILEAPI}/${file.file_path}`)).text();
+      document.getElementById('editorTitle').textContent = 'Edit — '+f.name;
+      document.getElementById('editorField').value = text;
+      openSheet('sheetEditor');
+      document.getElementById('editorSave').onclick = async ()=>{
+        const newText = document.getElementById('editorField').value;
+        const form = new FormData();
+        form.append('chat_id', CHAT_ID);
+        form.append('message_id', f.messageId);
+        form.append('media', JSON.stringify({type:'document', media:'attach://f', caption:f.path}));
+        form.append('f', new Blob([newText], {type:'text/plain'}), f.name);
+        try { await tg('editMessageMedia', form); f.size = new Blob([newText]).size; await persistIndex(); Sound.success(); toast('Saved'); }
+        catch(err){ toast('Could not save'); Sound.error(); }
+        closeSheet('sheetEditor'); render();
+      };
+      document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
+    } catch(e){ toast('Could not load content'); Sound.error(); }
+  };
+
+  row.querySelector('[data-a="rename"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    document.getElementById('inputSheetTitle').textContent = 'Rename file';
+    const field = document.getElementById('inputSheetField');
+    field.value = f.name; field.placeholder='File name';
+    openSheet('sheetInput');
+    document.getElementById('inputSheetConfirm').onclick = async ()=>{
+      const val = field.value.trim(); if(!val) return;
+      f.name = val; closeSheet('sheetInput');
+      await persistIndex(); Sound.success(); toast('Renamed'); render();
+    };
+    document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+  };
+
+  row.querySelector('[data-a="move"]').onclick = ()=>{
+    closeSheet('sheetItem');
+    document.getElementById('inputSheetTitle').textContent = 'Move to path';
+    const field = document.getElementById('inputSheetField');
+    field.value = f.path; field.placeholder='/Folder/Subfolder';
+    openSheet('sheetInput');
+    document.getElementById('inputSheetConfirm').onclick = async ()=>{
+      const val = normPath(field.value.trim()||'/');
+      if (val !== '/' && !state.index.folders.includes(val)) state.index.folders.push(val);
+      f.path = val; closeSheet('sheetInput');
+      await persistIndex(); Sound.success(); toast('Moved'); render();
+    };
+    document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+  };
+
+  row.querySelector('[data-a="delete"]').onclick = async ()=>{
+    closeSheet('sheetItem');
+    try { await tg('deleteMessage', { chat_id: CHAT_ID, message_id: f.messageId }); } catch(e){ /* message may already be gone */ }
+    state.index.files = state.index.files.filter(x=>x.id!==fileId);
+    await persistIndex(); Sound.delete(); toast('Deleted'); render();
+  };
+}
+
+/* ---- quick menu ---- */
+document.getElementById('btnMenu').onclick = ()=>{ Sound.tap(); openSheet('sheetMenu'); };
+document.getElementById('btnBack').onclick = ()=>{ if(state.path==='/') return; Sound.tap(); state.path = parentPath(state.path); render(); };
+document.querySelectorAll('#sheetMenu [data-act]').forEach(b=> b.onclick = ()=> openMenuAction(b.dataset.act));
+
+function openMenuAction(act){
+  closeSheet('sheetMenu');
+  if (act==='new-folder') openNewFolder();
+  else if (act==='upload') document.getElementById('fileInputHidden').click();
+  else if (act==='new-note') openNewNote();
+  else if (act==='refresh') bootIndex().then(()=>toast('Synced with cloud'));
+  else if (act==='about') toast('RiNi Cloud OS — your files, stored as an unlimited Telegram channel ☁️');
+}
+
+function openNewNote(){
+  document.getElementById('inputSheetTitle').textContent = 'New note name';
+  const field = document.getElementById('inputSheetField');
+  field.value=''; field.placeholder='notes.txt';
+  openSheet('sheetInput');
+  document.getElementById('inputSheetConfirm').onclick = ()=>{
+    let name = field.value.trim() || 'note.txt';
+    if (!name.includes('.')) name += '.txt';
+    closeSheet('sheetInput');
+    document.getElementById('editorTitle').textContent = 'New note — '+name;
+    document.getElementById('editorField').value = '';
+    openSheet('sheetEditor');
+    document.getElementById('editorSave').onclick = async ()=>{
+      const text = document.getElementById('editorField').value;
+      const form = new FormData();
+      form.append('chat_id', CHAT_ID);
+      form.append('document', new Blob([text],{type:'text/plain'}), name);
+      form.append('caption', state.path);
+      try {
+        const sent = await tg('sendDocument', form);
+        state.index.files.push({
+          id: 'f_'+sent.message_id, messageId: sent.message_id, fileId: sent.document.file_id,
+          name, path: state.path, size: sent.document.file_size||new Blob([text]).size,
+          mime: 'text/plain', date: Date.now()
+        });
+        await persistIndex(); Sound.success(); toast('Note saved to cloud');
+      } catch(e){ toast('Upload failed'); Sound.error(); }
+      closeSheet('sheetEditor'); render();
+    };
+    document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
+  };
+  document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
+}
+
+/* ---- upload flow ---- */
+document.getElementById('fileInputHidden').onchange = async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (file.size > CFG.MAX_FILE_MB*1024*1024){
+    toast(`Telegram's bot upload limit is ${CFG.MAX_FILE_MB}MB per file`); Sound.error(); return;
+  }
+  document.getElementById('uploadFileName').textContent = file.name;
+  document.getElementById('uploadProgressFill').style.width='10%';
+  openSheet('sheetUpload');
+  try {
+    const form = new FormData();
+    form.append('chat_id', CHAT_ID);
+    form.append('document', file, file.name);
+    form.append('caption', state.path);
+    document.getElementById('uploadProgressFill').style.width='55%';
+    const sent = await tg('sendDocument', form);
+    document.getElementById('uploadProgressFill').style.width='90%';
+    state.index.files.push({
+      id: 'f_'+sent.message_id, messageId: sent.message_id, fileId: sent.document.file_id,
+      name: file.name, path: state.path, size: sent.document.file_size||file.size,
+      mime: file.type||'application/octet-stream', date: Date.now()
+    });
+    await persistIndex();
+    document.getElementById('uploadProgressFill').style.width='100%';
+    setTimeout(()=> closeSheet('sheetUpload'), 300);
+    Sound.upload(); toast('Uploaded to your cloud');
+  } catch(err){
+    closeSheet('sheetUpload');
+    toast('Upload failed: '+err.message); Sound.error();
+  }
+  render();
+};
+
+/* ---------------------------------------------------------------------
+   Puter.js — auth + AI organizer
+   --------------------------------------------------------------------- */
+let puterUserCache = null;
+function puterSignedIn(){
+  try { return !!(window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn()); }
+  catch(e){ return false; }
+}
+
+async function runAiOrganize(){
+  Sound.tap();
+  if (!window.puter || !puter.ai){ toast('AI service failed to load'); Sound.error(); return; }
+  if (!puterSignedIn()){
+    try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); }
+    catch(e){ toast('Sign in to use the AI organizer'); return; }
+  }
+  const btn = document.getElementById('btnOrganize');
+  const label = document.getElementById('organizeLabel');
+  btn.classList.add('busy'); label.innerHTML = '<span class="spin">✦</span> Thinking…';
+
+  const flat = state.index.files.map(f=>({ id: f.id, name: f.name, path: f.path, mime: f.mime, size: f.size }));
+  if (!flat.length){ toast('Nothing to organize yet — upload some files first'); btn.classList.remove('busy'); label.textContent='One-tap Organize'; return; }
+
+  const prompt = `You are a tidy file-organizing assistant. Given this JSON array of files (id, name, path, mime, size),
+propose a cleaner folder structure grouped by file type/topic using short, friendly folder names starting with "/".
+Reply with ONLY a JSON array, no prose, no markdown fences, in this exact shape:
+[{"id":"<file id>","to":"/NewFolder/Sub"}, ...]
+Only include files whose folder should change. Files: ${JSON.stringify(flat)}`;
+
+  try {
+    const res = await puter.ai.chat(prompt);
+    let text = (res && res.message && res.message.content) || (typeof res==='string'? res : JSON.stringify(res));
+    text = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    const plan = JSON.parse(text);
+    let moved = 0;
+    plan.forEach(mv=>{
+      const f = state.index.files.find(x=>x.id===mv.id);
+      if (!f || !mv.to) return;
+      const to = normPath(mv.to);
+      if (to !== '/' && !state.index.folders.includes(to)) state.index.folders.push(to);
+      f.path = to; moved++;
+    });
+    await persistIndex();
+    Sound.organize();
+    toast(moved ? `Organized ${moved} file${moved===1?'':'s'} into tidy folders ✨` : 'Your files were already tidy!');
+  } catch(e){
+    toast('AI organizer had trouble — try again in a moment');
+    Sound.error();
+  }
+  btn.classList.remove('busy'); label.textContent = 'One-tap Organize';
+  render();
+}
+document.getElementById('btnOrganize').onclick = runAiOrganize;
+
+/* ---------------------------------------------------------------------
+   Search + tabs
+   --------------------------------------------------------------------- */
+document.getElementById('searchInput').oninput = (e)=>{ state.search = e.target.value; render(); };
+document.querySelectorAll('.nav-btn').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.tab = b.dataset.tab; render(); });
+
+/* ---------------------------------------------------------------------
+   Boot
+   --------------------------------------------------------------------- */
+document.getElementById('appTitle').textContent = CFG.APP_NAME || 'RiNi Cloud';
+if ('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+if (window.puter && puter.auth && puter.auth.getUser){ puter.auth.getUser().then(u=> puterUserCache=u).catch(()=>{}); }
+bootIndex();
+</script>
+</body>
+</html>
