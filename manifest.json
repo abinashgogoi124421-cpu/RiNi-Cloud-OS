@@ -1,0 +1,9 @@
+{
+  "name": "RiNi Cloud OS",
+  "short_name": "RiNi OS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#7c3aed",
+  "icons": [{"src":"https://cdn-icons-png.flaticon.com/512/3767/3767084.png","sizes":"512x512","type":"image/png"}]
+}
