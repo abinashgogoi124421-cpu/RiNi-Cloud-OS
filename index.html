@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RiNi Cloud OS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://js.puter.com/v2/"></script>
+</head>
+<body class="bg-[#f5f3ff] min-h-screen">
+<div class="flex h-screen">
+<div class="w-64 bg-white border-r p-4 flex flex-col">
+  <h1 class="text-2xl font-bold text-violet-600">RiNi OS</h1>
+  <p class="text-xs text-gray-500 mb-6">AI Cloud + Telegram</p>
+  <div class="space-y-1">
+    <button onclick="setFilter('All')" class="w-full text-left p-2 rounded bg-violet-100">All Files</button>
+    <button onclick="setFilter('Bills')" class="w-full text-left p-2 rounded hover:bg-gray-100">Bills</button>
+    <button onclick="setFilter('IDs')" class="w-full text-left p-2 rounded hover:bg-gray-100">IDs</button>
+    <button onclick="setFilter('Photos')" class="w-full text-left p-2 rounded hover:bg-gray-100">Photos</button>
+    <button onclick="setFilter('Docs')" class="w-full text-left p-2 rounded hover:bg-gray-100">Docs</button>
+    <button onclick="setFilter('Apps')" class="w-full text-left p-2 rounded hover:bg-gray-100">Apps</button>
+    <button onclick="setFilter('Memes')" class="w-full text-left p-2 rounded hover:bg-gray-100">Memes</button>
+    <button onclick="setFilter('Other')" class="w-full text-left p-2 rounded hover:bg-gray-100">Other</button>
+  </div>
+  <div class="mt-auto">
+    <div class="bg-violet-50 p-3 rounded-xl text-xs"><span id="stats">0 files</span><br>Channel -1003953146702</div>
+    <button onclick="restoreIndex()" class="mt-2 w-full text-xs p-2 bg-black text-white rounded-lg">♻️ Recovery</button>
+  </div>
+</div>
+<div class="flex-1 flex flex-col">
+  <div class="bg-white border-b p-3 flex gap-2">
+    <input id="search" oninput="renderFiles()" placeholder="Search..." class="flex-1 p-2 bg-gray-100 rounded text-sm">
+    <select id="sort" onchange="renderFiles()" class="p-2 bg-gray-100 rounded text-sm"><option value="date">Newest</option><option value="name">Name</option><option value="size">Size</option></select>
+    <button onclick="document.getElementById('fileInput').click()" class="bg-violet-600 text-white px-4 py-2 rounded text-sm">Backup</button>
+    <input type="file" id="fileInput" hidden multiple onchange="handleFiles(this.files)">
+  </div>
+  <div class="grid grid-cols-3 gap-3 p-4">
+    <div class="bg-white p-3 rounded-xl"><p class="text-xs">Files</p><p id="totalFiles" class="font-bold">0</p></div>
+    <div class="bg-white p-3 rounded-xl"><p class="text-xs">Used</p><p id="totalSize" class="font-bold">0 MB</p></div>
+    <div class="bg-white p-3 rounded-xl"><p class="text-xs">AI Sorted</p><p id="aiCount" class="font-bold">0</p></div>
+  </div>
+  <div id="drop" class="mx-4 border-2 border-dashed border-violet-300 rounded-xl p-4 text-center bg-violet-50">Drag & Drop to Backup + AI Organize</div>
+  <div id="grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+</div>
+</div>
+<script>
+const BOT_TOKEN = "8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E";
+const CHANNEL_ID = "-1003953146702";
+let FILES = JSON.parse(localStorage.getItem('rini_files')||'[]');
+let FILTER='All';
+function saveIndex(){localStorage.setItem('rini_files',JSON.stringify(FILES));updateStats();}
+function updateStats(){let s=FILES.reduce((a,b)=>a+b.size,0)/1024/1024;document.getElementById('stats').innerText=FILES.length+' files • '+s.toFixed(1)+' MB';document.getElementById('totalFiles').innerText=FILES.length;document.getElementById('totalSize').innerText=s.toFixed(1)+' MB';document.getElementById('aiCount').innerText=FILES.filter(f=>f.folder!=='Other').length;}
+async function aiClassify(name){try{const r=await puter.ai.chat(`Classify filename "${name}" into ONE: Bills, IDs, Photos, Docs, Apps, Memes, Other. Reply only word.`,{model:'mistral'});let f=r.message.content.trim().replace(/[^a-zA-Z]/g,'');return ['Bills','IDs','Photos','Docs','Apps','Memes'].includes(f)?f:'Other';}catch(e){return 'Other';}}
+async function uploadToTelegram(file,folder){if(BOT_TOKEN==="YOUR_BOT_TOKEN")return{file_id:'demo_'+Date.now()};let fd=new FormData();fd.append('chat_id',CHANNEL_ID);fd.append('document',file);fd.append('caption',`📁 /RiNi/${folder}/ | ${file.name}`);let res=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`,{method:'POST',body:fd});let d=await res.json();if(!d.ok)throw Error(d.description);return d.result.document;}
+async function handleFiles(list){for(let file of list){let folder=await aiClassify(file.name);try{let tg=await uploadToTelegram(file,folder);FILES.unshift({id:Date.now()+Math.random(),name:file.name,size:file.size,type:file.type,folder,file_id:tg.file_id,date:new Date().toISOString()});saveIndex();renderFiles();}catch(e){alert(e.message);}}}
+function setFilter(f){FILTER=f;renderFiles();}
+function renderFiles(){let q=document.getElementById('search').value.toLowerCase();let sort=document.getElementById('sort').value;let list=FILES.filter(f=>(FILTER==='All'||f.folder===FILTER)&&f.name.toLowerCase().includes(q));if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));if(sort==='size')list.sort((a,b)=>b.size-a.size);if(sort==='date')list.sort((a,b)=>new Date(b.date)-new Date(a.date));document.getElementById('grid').innerHTML=list.map(f=>`<div class="bg-white p-3 rounded-xl border"><span class="text-[10px] bg-violet-100 px-2 rounded">${f.folder}</span><p class="text-sm truncate mt-1">${f.name}</p><p class="text-[10px] text-gray-400">${(f.size/1024).toFixed(0)}KB</p><div class="flex gap-1 mt-2"><button onclick="downloadFile('${f.file_id}')" class="flex-1 text-xs bg-black text-white py-1 rounded">DL</button><button onclick="renameFile('${f.id}')" class="flex-1 text-xs bg-gray-100 py-1 rounded">Edit</button><button onclick="deleteFile('${f.id}')" class="flex-1 text-xs bg-red-50 py-1 rounded">Del</button></div></div>`).join('');}
+async function downloadFile(id){if(id.startsWith('demo_')){alert('Demo - set BOT_TOKEN');return;}let r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${id}`);let d=await r.json();if(d.ok)window.open(`https://api.telegram.org/file/bot${BOT_TOKEN}/${d.result.file_path}`);}
+function deleteFile(id){if(!confirm('Delete?'))return;FILES=FILES.filter(f=>f.id!=id);saveIndex();renderFiles();}
+function renameFile(id){let f=FILES.find(x=>x.id==id);let n=prompt('New name',f.name);if(n){f.name=n;saveIndex();renderFiles();}}
+function restoreIndex(){alert('Recovery: localStorage + Telegram. Set BOT_TOKEN for full recovery.');}
+const drop=document.getElementById('drop');drop.addEventListener('dragover',e=>{e.preventDefault();});drop.addEventListener('drop',e=>{e.preventDefault();handleFiles(e.dataTransfer.files);});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+updateStats();renderFiles();
+</script>
+</body>
+</html>
