@@ -28,3 +28,12 @@ window.APP_CONFIG = {
   // unlimited (as many files as you like), but no single file can exceed
   // this size through the plain Bot API.
   MAX_FILE_MB: 50,
+
+  // Local cache key (per-browser fast listing; the channel's pinned
+  // index.json document is always the real source of truth)
+  CACHE_KEY: "rini_cloud_index_v1",
+
+  // Puter.js — no key needed, it's the public web SDK loaded in index.html.
+  // AI features are gated behind the user signing in with their own
+  // Puter account (handled in-app, in the "Me" tab).
+};
