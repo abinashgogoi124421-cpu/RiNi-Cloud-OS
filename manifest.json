@@ -1,15 +1,38 @@
 {
-  "name": "RiNi Cloud OS",
-  "short_name": "RiNi OS",
-  "description": "Unlimited cloud file manager backed by Telegram, with an AI organizer.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "name": "AI Memory Bot",
+  "short_name": "Memory Bot",
+  "description": "AI chatbot with unlimited Telegram storage",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f5f3ff",
-  "theme_color": "#7c3aed",
+  "theme_color": "#0d1117",
+  "background_color": "#0d1117",
+  "categories": ["productivity", "utilities", "chat"],
   "icons": [
-    { "src": "https://cdn-icons-png.flaticon.com/512/3767/3767084.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "https://cdn-icons-png.flaticon.com/512/3767/3767084.png", "sizes": "192x192", "type": "image/png" }
-  ]
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3767/3767084.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3767/3767084.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "url": "/",
+      "description": "Start a new conversation"
+    },
+    {
+      "name": "Upload File",
+      "url": "/?action=upload",
+      "description": "Upload a file to storage"
+    }
+  ],
+  "display_override": ["standalone", "minimal-ui"]
 }
