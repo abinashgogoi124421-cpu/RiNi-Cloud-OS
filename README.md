@@ -26,6 +26,58 @@ npx serve .
 Then open it on your phone/desktop and use "Add to Home Screen" / the
 browser's install prompt.
 
+## AI Chat (floating 💬 button)
+Tap the floating chat bubble (bottom-right, on every screen) for a full-screen
+AI chat like ChatGPT/Meta AI:
+- **Multiple sessions** — tap ➕ for a new chat, ☰ to switch between or close
+  past ones. Each session's conversation is kept only in the browser's memory
+  for as long as the page stays open — closing/reloading the app clears it
+  automatically (true session memory, nothing written to disk).
+- **Permanent memory** — when you ask the assistant to remember something
+  long-term (or it decides something's worth keeping), it saves a real text
+  file into a `/ai-memories` folder in your cloud drive, browsable like any
+  other folder and available in every future session.
+- **File operations by chat** — "create a folder called Bills", "move
+  photo.png to /Pictures", "delete old notes", "restore report.pdf",
+  "organize everything", "empty my trash" all work as plain-language
+  requests; the assistant translates them into the same safe operations the
+  manual UI uses.
+- **Read / analyze files — only when you ask.** There's no built-in "analyze"
+  button. Say "show me what's in notes.txt" and it displays the file's exact
+  contents; say "analyse config.js" and it displays the contents *and* adds
+  its own analysis underneath. Nothing is scanned automatically.
+- **Web search** — ask a general-knowledge or lookup question and it queries
+  Wikipedia and DuckDuckGo, then rewrites the results into a clean answer.
+  Note: DuckDuckGo's public API doesn't always allow direct browser requests
+  (CORS) — when that happens the assistant falls back to whatever it already
+  knows and says so, rather than failing silently.
+- **Rich text formatting** in every reply: `**bold**`, `__italic__` (or
+  `_italic_`), `~~strikethrough~~`, `**__bold italic__**`, and simple
+  pipe-style tables (`| A | B |` / `|---|---|`) all render properly instead
+  of showing raw symbols.
+
+All of this requires signing in with Puter first (button in the Me tab, or
+the chat will prompt you the first time you send a message).
+
+## Real file-manager features
+- **Path system** — every file/folder has a real virtual path; new files/folders
+  are created inside whatever folder you're currently browsing.
+- **Trash / Recycle Bin** — deleting a file or folder moves it to Trash
+  (Clean tab) instead of destroying it immediately. Restore it (♻️) or empty
+  Trash to permanently remove it and free space.
+- **Multi-select** — Quick menu → "Select multiple" turns on checkboxes on
+  every file row; a selection bar lets you bulk-move or bulk-trash at once.
+- **Duplicate, Details, Copy path, Preview** — full per-file action sheet.
+- **Drag-and-drop upload** (desktop) — drop files onto the file list or onto
+  a specific folder card to upload straight into it.
+- **Sort** — tap the sort icon above a file list to cycle name/size/date.
+- **AI chat "writing slot"** (Me tab) — type instructions in plain language
+  (create, rename, move, delete, restore, organize, empty trash, or just ask
+  a question about your storage) and the assistant carries them out.
+- Native text selection / long-press callouts are disabled everywhere except
+  inside actual text fields, so the app feels like a native file manager
+  rather than a web page.
+
 ## How storage works
 - Every upload is sent to the channel with Telegram's `sendDocument`.
 - A single pinned message (`index.json`) is the source of truth for your
