@@ -1,1573 +1,1209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>RiNi Cloud OS</title>
-<meta name="theme-color" content="#7c3aed">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="./config.js"></script>
-<script src="https://js.puter.com/v2/"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0d1117">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Memory Bot">
+    <meta name="application-name" content="AI Memory Bot">
+    <meta name="description" content="AI Memory Bot with unlimited Telegram storage">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
+    <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png">
+    
+    <!-- PWA Installation -->
+    <link rel="mask-icon" href="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" color="#1f6feb">
+    
+    <title>AI Memory Bot</title>
+    <script src="https://cdn.jsdelivr.net/npm/puter.js"></script>
+    
+    <style>
+        /* === RESET & BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
 
-:root{
-  --bg1:#eee6fb; --bg2:#fdeadb;
-  --ink:#372a6b; --ink-soft:#6a5cab;
-  --card-mint:#d7f2df; --card-mint-ink:#1f6b3f;
-  --card-sky:#d7e7fb; --card-sky-ink:#2456a3;
-  --card-butter:#faf1c6; --card-butter-ink:#8a6a12;
-  --card-blush:#fbe0ea; --card-blush-ink:#a13a67;
-  --card-lilac:#e7defb; --card-lilac-ink:#5b3ea3;
-  --card-peach:#fde1d1; --card-peach-ink:#b1591f;
-  --white-card: rgba(255,255,255,.72);
-  --shadow: 0 10px 0 rgba(90,70,150,.10), 0 14px 24px rgba(90,70,150,.14);
-  --shadow-sm: 0 6px 0 rgba(90,70,150,.10), 0 8px 14px rgba(90,70,150,.12);
-  --radius-xl:32px; --radius-lg:26px; --radius-md:20px; --radius-pill:999px;
-  --accent:#8a6bf0; --danger:#e2637a;
-}
-*{box-sizing:border-box;}
-html,body{height:100%;}
-body{
-  margin:0; font-family:'Fredoka',sans-serif; color:var(--ink);
-  background:
-    radial-gradient(circle at 12% 8%, #fff6e9 0%, transparent 40%),
-    radial-gradient(circle at 90% 85%, #e6f7ff 0%, transparent 45%),
-    linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
-  min-height:100vh; -webkit-tap-highlight-color:transparent; overscroll-behavior:contain;
-  touch-action:manipulation; -webkit-touch-callout:none;
-}
-#app, .folder-card, .file-row, .nav-btn, .icon-btn, .action-item, .crumb,
-.section-label, .storage-card, .me-card, .settings-item, .chip, .type-pill,
-h1.app-title, .sheet h2, .empty-state, .folder-more, .file-more, .btn,
-.chat-msg, .search-bar, .storage-meta, .storage-sub, .selection-bar, .ai-fab,
-.ai-chat-header, .ai-chat-title{
-  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
-}
-input, textarea{ user-select:text !important; -webkit-user-select:text !important; -webkit-touch-callout:default !important; }
-.chat-msg, .chat-msg *{ user-select:text; -webkit-user-select:text; }
+        /* === APP CONTAINER === */
+        .app {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #0d1117;
+            position: relative;
+        }
 
-#app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:96px; }
+        /* === HEADER === */
+        .header {
+            padding: 16px 20px;
+            background: rgba(22, 27, 34, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 10;
+        }
 
-.topbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:22px 20px 8px; }
-.icon-btn{ width:52px;height:52px; border-radius:var(--radius-pill); background:var(--white-card); border:none; display:flex;align-items:center;justify-content:center; box-shadow:var(--shadow-sm); cursor:pointer; color:var(--ink); flex:none; transition:transform .12s ease; }
-.icon-btn:active{ transform:scale(.9); }
-.icon-btn.small{ width:44px;height:44px; font-size:14px; }
-.icon-btn:disabled{ opacity:.35; }
-.title-wrap{ flex:1; min-width:0; }
-h1.app-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:28px; line-height:1.05; margin:0; overflow-wrap:anywhere; }
-.crumbs{ display:flex; gap:6px; margin-top:8px; overflow-x:auto; scrollbar-width:none; }
-.crumbs::-webkit-scrollbar{ display:none; }
-.crumb{ font-size:13px; color:var(--ink-soft); background:var(--white-card); padding:4px 12px; border-radius:var(--radius-pill); white-space:nowrap; cursor:pointer; font-weight:500; border:none; font-family:'Fredoka'; }
-.crumb.current{ background:var(--accent); color:#fff; font-weight:600; }
-.top-actions{ display:flex; gap:10px; }
-#searchBarWrap.hidden, #crumbs.hidden, #btnBack.hidden{ display:none !important; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.search-bar{ margin:14px 20px 0; display:flex; align-items:center; gap:12px; background:var(--card-butter); padding:16px 20px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); color:var(--card-butter-ink); }
-.search-bar input{ border:none;background:transparent;outline:none; font-family:'Fredoka';font-size:16px;font-weight:500; color:var(--ink);width:100%; }
-.search-bar input::placeholder{ color:#b8a568; }
+        .header .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            overflow: hidden;
+        }
 
-.storage-card{ margin:16px 20px 0; background:var(--card-mint); border-radius:var(--radius-xl); padding:20px 22px; box-shadow:var(--shadow); color:var(--card-mint-ink); }
-.storage-top{ display:flex; align-items:center; gap:16px; }
-.storage-icon{ width:56px;height:56px;flex:none; border-radius:18px; background:rgba(255,255,255,.6); display:flex;align-items:center;justify-content:center; }
-.storage-title{ font-family:'Baloo 2'; font-weight:700; font-size:21px; }
-.storage-sub{ font-size:13px; opacity:.75; font-weight:500; margin-top:2px; }
-.storage-bar-track{ margin-top:16px; height:14px;border-radius:var(--radius-pill); background:rgba(255,255,255,.55); overflow:hidden; }
-.storage-bar-fill{ height:100%; background:linear-gradient(90deg,#7cd8a0,#4fb37f); border-radius:var(--radius-pill); width:4%; transition:width .4s ease; }
-.storage-meta{ display:flex;justify-content:space-between;align-items:center; margin-top:12px; font-size:14px; font-weight:500; }
-.chip{ background:rgba(255,255,255,.7); padding:5px 14px;border-radius:var(--radius-pill); font-size:13px;font-weight:600; }
-.type-breakdown{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
-.type-pill{ font-size:12px; font-weight:600; padding:6px 12px; border-radius:var(--radius-pill); background:rgba(255,255,255,.55); }
+        .header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-.section-label{ font-family:'Baloo 2'; font-weight:700; font-size:21px; margin:24px 20px 2px; color:var(--ink); display:flex; align-items:center; gap:8px; }
-.section-label .twinkle{ font-size:15px; opacity:.7; }
+        .header h1 {
+            font-size: 17px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-.folder-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:14px 20px 0; }
-.folder-card{ border-radius:var(--radius-lg); padding:16px 8px 14px; text-align:center; box-shadow:var(--shadow-sm); cursor:pointer; position:relative; border:none; font-family:'Fredoka'; transition:transform .12s ease; display:flex; flex-direction:column; align-items:center; gap:8px; }
-.folder-card:active{ transform:scale(.94); }
-.folder-glyph{ width:50px;height:50px; border-radius:15px; background:rgba(255,255,255,.55); display:flex;align-items:center;justify-content:center; }
-.folder-name{ font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
-.folder-meta{ font-size:10.5px; opacity:.7; font-weight:500; }
-.folder-card.new{ background:var(--white-card); color:var(--ink-soft); border:2px dashed rgba(90,70,150,.25); box-shadow:none; }
-.folder-card.dragover{ outline:3px dashed var(--accent); }
-.folder-more{ position:absolute; top:8px; right:8px; width:26px;height:26px;border-radius:50%; border:none; background:rgba(255,255,255,.65); font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:inherit; }
-.c-mint{ background:var(--card-mint); color:var(--card-mint-ink); }
-.c-sky{ background:var(--card-sky); color:var(--card-sky-ink); }
-.c-butter{ background:var(--card-butter); color:var(--card-butter-ink); }
-.c-blush{ background:var(--card-blush); color:var(--card-blush-ink); }
-.c-lilac{ background:var(--card-lilac); color:var(--card-lilac-ink); }
-.c-peach{ background:var(--card-peach); color:var(--card-peach-ink); }
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #8b949e;
+        }
 
-.file-list{ margin:14px 20px 0; display:flex; flex-direction:column; gap:10px; }
-.file-row{ display:flex; align-items:center; gap:14px; background:var(--white-card); padding:14px 16px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); cursor:pointer; }
-.file-row.row-selected{ outline:2.5px solid var(--accent); }
-.file-row .folder-glyph{ width:42px;height:42px;border-radius:13px; }
-.select-check{ width:42px;height:42px;border-radius:13px;border:2px solid #cdbdf2; display:flex;align-items:center;justify-content:center; font-weight:700; color:#fff; flex:none; background:#fff; }
-.select-check.checked{ background:var(--accent); border-color:var(--accent); }
-.file-info{ flex:1; min-width:0; }
-.file-name{ font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.file-meta{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
-.file-more{ width:36px;height:36px;border-radius:var(--radius-pill); border:none; background:rgba(120,100,190,.12); color:var(--ink); display:flex;align-items:center;justify-content:center; cursor:pointer; flex:none; font-size:14px; }
-.empty-state{ margin:40px 20px; text-align:center; color:var(--ink-soft); }
-.empty-state .big{ font-size:40px; }
-.empty-state p{ font-weight:500; }
-.dragging-hint{ margin:14px 20px 0; padding:14px; border-radius:18px; border:2px dashed var(--accent); text-align:center; color:var(--accent); font-weight:600; font-size:13px; }
+        .header-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2ea043;
+            animation: pulse 2s infinite;
+        }
 
-.bottom-nav{ position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto; background:var(--white-card); backdrop-filter:blur(10px); border-radius:28px 28px 0 0; display:flex; justify-content:space-around; padding:12px 10px calc(10px + env(safe-area-inset-bottom)); box-shadow:0 -6px 20px rgba(90,70,150,.14); z-index:50; }
-.nav-btn{ background:none;border:none; font-family:'Fredoka'; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer; }
-.nav-btn.active{ color:var(--accent); }
-.nav-underline{ width:22px;height:3px;border-radius:3px; background:transparent; margin-top:1px; }
-.nav-btn.active .nav-underline{ background:var(--accent); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
 
-.selection-bar{ position:fixed; left:50%; transform:translateX(-50%); bottom:100px; max-width:440px; width:calc(100% - 40px); background:var(--ink); color:#fff; border-radius:var(--radius-pill); padding:10px 10px 10px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 10px 24px rgba(40,20,80,.35); z-index:60; font-weight:600; font-size:14px; gap:10px; }
-.selection-actions{ display:flex; gap:8px; }
-.selection-actions .icon-btn{ background:rgba(255,255,255,.16); color:#fff; box-shadow:none; }
-.selection-actions .icon-btn:disabled{ opacity:.3; }
+        .header-actions {
+            display: flex;
+            gap: 4px;
+        }
 
-/* ---------- floating AI chat button (ChatGPT/Meta-AI style) ---------- */
-.ai-fab{ position:fixed; right:18px; bottom:104px; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#8a6bf0,#c084f5); color:#fff; border:none; font-size:25px; box-shadow:0 10px 24px rgba(120,80,220,.45); z-index:70; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.ai-fab:active{ transform:scale(.92); }
-.ai-fab.hidden{ display:none !important; }
+        .header-actions button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
 
-/* ---------- full-screen AI chat overlay ---------- */
-.overlay-full{ position:fixed; inset:0; background:#fffaf3; z-index:150; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .22s ease; }
-.overlay-full.show{ transform:translateY(0); }
-.ai-chat-screen{ max-width:480px; margin:0 auto; width:100%; height:100%; display:flex; flex-direction:column; }
-.ai-chat-header{ display:flex; align-items:center; gap:8px; padding:calc(14px + env(safe-area-inset-top)) 14px 12px; border-bottom:1px solid #f0e6ff; }
-.ai-chat-title{ flex:1; font-family:'Baloo 2'; font-weight:700; font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ai-chat-body{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
-.ai-chat-inputbar{ display:flex; gap:8px; padding:12px 14px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid #f0e6ff; }
-.ai-chat-inputbar .field{ margin-bottom:0; flex:1; }
-.ai-chat-inputbar .btn{ width:auto; padding:14px 18px; margin-top:0; flex:none; }
+        .header-actions button:hover {
+            color: #e6edf3;
+            background: #30363d;
+        }
 
-.chat-msg{ padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.5; max-width:88%; }
-.chat-msg.user{ align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
-.chat-msg.assistant{ align-self:flex-start; background:#f6f1ff; color:var(--ink); border-bottom-left-radius:4px; max-width:94%; }
-.chat-msg b{ font-weight:700; }
-.chat-msg i{ font-style:italic; }
-.chat-msg s{ text-decoration:line-through; }
-.chat-pre{ white-space:pre-wrap; word-break:break-word; font-family:'Menlo','Consolas',monospace; font-size:12.5px; background:#fffaf3; border-radius:10px; padding:10px; margin:4px 0; border:1px solid #ece2fb; }
-.chat-table{ border-collapse:collapse; width:100%; margin:6px 0; font-size:12.5px; }
-.chat-table th, .chat-table td{ border:1px solid #e6dcf7; padding:5px 9px; text-align:left; }
-.chat-table th{ background:#efe6ff; }
-.chat-typing{ display:inline-flex; gap:4px; align-items:center; }
-.chat-typing span{ width:6px;height:6px;border-radius:50%; background:var(--ink-soft); opacity:.5; animation:blink 1s infinite; }
-.chat-typing span:nth-child(2){ animation-delay:.15s; }
-.chat-typing span:nth-child(3){ animation-delay:.3s; }
-@keyframes blink{ 0%,80%,100%{ opacity:.25; } 40%{ opacity:.9; } }
+        /* === CHAT AREA === */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-behavior: smooth;
+        }
 
-.overlay{ position:fixed; inset:0; background:rgba(50,35,90,.35); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .18s ease; }
-.overlay.show{ opacity:1; pointer-events:auto; }
-.sheet{ background:#fffaf3; width:100%; max-width:480px; border-radius:30px 30px 0 0; padding:22px 22px calc(26px + env(safe-area-inset-bottom)); transform:translateY(30px); transition:transform .2s ease; max-height:82vh; overflow-y:auto; }
-.overlay.show .sheet{ transform:translateY(0); }
-.sheet h2{ font-family:'Baloo 2'; font-size:21px; margin:0 0 14px; }
-.sheet p{ font-family:'Fredoka'; }
-.sheet-handle{ width:44px;height:5px;border-radius:4px;background:#e6dcf7; margin:0 auto 16px; }
-.field{ width:100%; padding:14px 16px; border-radius:16px; border:2px solid #f0e6ff; font-family:'Fredoka'; font-size:16px; background:#fff; margin-bottom:12px; outline:none; }
-.field:focus{ border-color:var(--accent); }
-textarea.field{ min-height:140px; resize:vertical; font-family:'Menlo',monospace; font-size:14px; }
-.btn{ width:100%; padding:15px; border:none; border-radius:16px; font-family:'Baloo 2'; font-weight:700; font-size:16px; cursor:pointer; background:var(--accent); color:#fff; box-shadow:0 6px 0 rgba(90,50,180,.25); margin-top:4px; }
-.btn:active{ transform:translateY(3px); box-shadow:none; }
-.btn.secondary{ background:#f0eaff; color:var(--ink); box-shadow:0 6px 0 rgba(150,130,220,.15); }
-.btn.danger{ background:var(--danger); box-shadow:0 6px 0 rgba(180,50,80,.25); }
-.btn:disabled{ opacity:.5; }
-.btn-organize-me{ margin:16px 20px 0; width:calc(100% - 40px); }
-.action-row{ display:flex; flex-direction:column; gap:6px; }
-.action-item{ display:flex; align-items:center; gap:14px; padding:14px 6px; border-radius:14px; cursor:pointer; font-weight:600; background:none; border:none; font-family:'Fredoka'; font-size:15px; text-align:left; color:var(--ink); width:100%; }
-.action-item:active{ background:#f4eeff; }
-.action-item.danger-text{ color:var(--danger); }
-.session-row{ display:flex; align-items:center; gap:8px; }
-.session-row .action-item{ flex:1; }
-#detailsBody div{ padding:6px 0; border-bottom:1px solid #f2ecff; user-select:text; -webkit-user-select:text; }
-#detailsBody div:last-child{ border-bottom:none; }
+        .chat-area::-webkit-scrollbar {
+            width: 4px;
+        }
 
-.me-card{ margin:16px 20px 0; padding:22px; border-radius:var(--radius-xl); background:var(--card-lilac); color:var(--card-lilac-ink); box-shadow:var(--shadow); }
-.me-row{ display:flex; align-items:center; gap:14px; }
-.me-avatar{ width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.55); display:flex;align-items:center;justify-content:center; flex:none; }
-.me-name{ font-family:'Baloo 2'; font-weight:700; font-size:18px; }
-.me-sub{ font-size:13px; opacity:.75; font-weight:500; }
-.status-dot{ width:9px;height:9px;border-radius:50%; display:inline-block; margin-right:6px; }
-.dot-off{ background:#c98a8a; }
-.dot-on{ background:#57b17e; }
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-.ai-panel{ margin:16px 20px 0; padding:20px; border-radius:var(--radius-xl); background:linear-gradient(150deg,#efe6ff,#fff0e0); box-shadow:var(--shadow-sm); }
-.ai-panel h3{ font-family:'Baloo 2'; margin:0 0 6px; font-size:17px; }
-.ai-panel p{ font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4; }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 2px;
+        }
 
-.settings-list{ margin:16px 20px 40px; display:flex; flex-direction:column; gap:10px; }
-.settings-item{ display:flex; align-items:center; justify-content:space-between; background:var(--white-card); padding:16px 18px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); font-weight:600; cursor:pointer; }
-.settings-item small{ font-weight:500; color:var(--ink-soft); display:block; margin-top:2px; }
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
 
-#toast{ position:fixed; bottom:110px; left:50%; transform:translateX(-50%) translateY(20px); background:#372a6b; color:#fff; padding:12px 22px; border-radius:var(--radius-pill); font-weight:600; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; white-space:nowrap; max-width:88%; text-align:center; }
-#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-.hidden{ display:none !important; }
-.progress-line{ height:8px;border-radius:8px;background:#f0e6ff;overflow:hidden;margin-top:10px; }
-.progress-line > div{ height:100%; width:0%; background:var(--accent); transition:width .15s ease; }
-.spin{ animation:spin 1s linear infinite; display:inline-block; }
-@keyframes spin{ to{ transform:rotate(360deg); } }
-</style>
+        /* === MESSAGES === */
+        .message {
+            max-width: 88%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            transition: all 0.25s ease;
+            touch-action: pan-y;
+            cursor: default;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #1c2333;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            border: 1px solid #30363d;
+        }
+
+        .message.ai {
+            background: #161b22;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #30363d;
+        }
+
+        .message.system {
+            background: transparent;
+            align-self: center;
+            color: #8b949e;
+            font-size: 12px;
+            padding: 4px 12px;
+            border: none;
+        }
+
+        .message .timestamp {
+            font-size: 10px;
+            color: #484f58;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .message-content {
+            line-height: 1.6;
+        }
+
+        .message-content strong { color: #58a6ff; }
+        .message-content em { color: #f0883e; }
+        .message-content del { color: #f85149; text-decoration: line-through; }
+        .message-content code {
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #f0883e;
+        }
+        .message-content pre {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            border: 1px solid #30363d;
+        }
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: #e6edf3;
+        }
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        .message-content th, .message-content td {
+            border: 1px solid #30363d;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        .message-content th {
+            background: #161b22;
+            color: #58a6ff;
+        }
+        .message-content ul, .message-content ol {
+            padding-left: 20px;
+            margin: 4px 0;
+        }
+
+        /* === FILE MESSAGES === */
+        .file-message {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            max-width: 100%;
+        }
+
+        .file-message:hover {
+            border-color: #58a6ff;
+            background: #1c2333;
+        }
+
+        .file-icon {
+            font-size: 28px;
+            width: 40px;
+            text-align: center;
+        }
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .file-name {
+            font-size: 14px;
+            color: #e6edf3;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .file-meta {
+            font-size: 11px;
+            color: #8b949e;
+            display: flex;
+            gap: 12px;
+            margin-top: 2px;
+        }
+        .file-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .file-actions button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .file-actions button:hover {
+            color: #e6edf3;
+            background: #30363d;
+        }
+        .file-actions button.delete:hover {
+            color: #f85149;
+        }
+
+        /* === INPUT AREA === */
+        .input-area {
+            padding: 12px 16px 16px;
+            background: rgba(22, 27, 34, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #30363d;
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 4px;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            color: #e6edf3;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            min-height: 20px;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: #484f58;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+        }
+
+        .input-actions button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .input-actions button:hover {
+            color: #e6edf3;
+            background: #30363d;
+        }
+
+        .input-actions button.send {
+            background: #1f6feb;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+        }
+
+        .input-actions button.send:hover {
+            background: #388bfd;
+            transform: scale(1.02);
+        }
+
+        .input-actions button.send:active {
+            transform: scale(0.95);
+        }
+
+        /* === TYPING INDICATOR === */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 10px 16px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            gap: 4px;
+            margin: 4px 0;
+        }
+
+        .typing-indicator .dot {
+            width: 6px;
+            height: 6px;
+            background: #8b949e;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* === ANIMATIONS === */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes slideOutLeft {
+            from { transform: translateX(0); opacity: 1; max-height: 500px; margin: 8px 0; }
+            to { transform: translateX(-100%); opacity: 0; max-height: 0; margin: 0; padding: 0; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; max-height: 500px; margin: 8px 0; }
+            to { transform: translateX(100%); opacity: 0; max-height: 0; margin: 0; padding: 0; }
+        }
+
+        .message.swipe-left {
+            animation: slideOutLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .message.swipe-right {
+            animation: slideOutRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 600px) {
+            .message { max-width: 92%; }
+            .header h1 { font-size: 15px; }
+            .header .avatar { width: 30px; height: 30px; font-size: 14px; }
+        }
+
+        @media (min-width: 768px) {
+            .app { max-width: 600px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.8); }
+        }
+
+        /* === INSTALL BUTTON === */
+        #installBtn {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f6feb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(31, 111, 235, 0.4);
+            display: none;
+        }
+
+        #installBtn.show {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        /* === FILE DROP ZONE === */
+        .file-drop-zone {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+            border: 2px dashed #30363d;
+            margin: 20px;
+            border-radius: 20px;
+        }
+
+        .file-drop-zone.active {
+            display: flex;
+        }
+
+        .file-drop-zone .icon {
+            font-size: 64px;
+        }
+        .file-drop-zone .text {
+            font-size: 20px;
+            color: #8b949e;
+        }
+        .file-drop-zone .sub {
+            font-size: 14px;
+            color: #484f58;
+        }
+    </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- ============ TOP BAR ============ -->
-  <div class="topbar">
-    <button class="icon-btn" id="btnBack" title="Back">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <div class="title-wrap">
-      <h1 class="app-title" id="appTitle">RiNi Cloud</h1>
-      <div class="crumbs" id="crumbs"></div>
-    </div>
-    <div class="top-actions">
-      <button class="icon-btn" id="btnMenu" title="Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- ============ SEARCH ============ -->
-  <div class="search-bar" id="searchBarWrap">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-    <input id="searchInput" placeholder="Search files &amp; folders">
-  </div>
-
-  <!-- ============ MAIN VIEWS ============ -->
-  <div id="view-home">
-    <div class="storage-card">
-      <div class="storage-top">
-        <div class="storage-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M6 18a4 4 0 0 1-.7-7.94A5.5 5.5 0 0 1 16.3 8.05 4.5 4.5 0 0 1 17.5 17H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    <!-- === APP === -->
+    <div class="app" id="app">
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="avatar">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" alt="Memory Bot">
+                </div>
+                <div>
+                    <h1>Memory Bot</h1>
+                    <div class="header-status">
+                        <span class="dot"></span>
+                        <span>Online</span>
+                        <span style="margin-left: 8px; color: #484f58;">•</span>
+                        <span id="storageCount" style="color: #484f58;">0 files</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button onclick="refreshStorage()" title="Refresh storage">🔄</button>
+                <button onclick="clearChat()" title="Clear chat">🗑️</button>
+                <button onclick="toggleTheme()" title="Toggle theme">🌙</button>
+            </div>
         </div>
-        <div>
-          <div class="storage-title">Cloud Storage</div>
-          <div class="storage-sub" id="storageSub">Loading your files…</div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <!-- Messages will appear here -->
         </div>
-      </div>
-      <div class="storage-bar-track"><div class="storage-bar-fill" id="storageBar"></div></div>
-      <div class="storage-meta">
-        <span id="storageUsedText">0 MB used</span>
-        <span class="chip">Unlimited plan</span>
-      </div>
-      <div class="type-breakdown" id="typeBreakdown"></div>
-    </div>
 
-    <div class="section-label">Folders <span class="twinkle">✦</span></div>
-    <div class="folder-grid" id="folderGrid"></div>
-
-    <div class="section-label hidden" id="filesLabel" style="justify-content:space-between;">
-      <span>Files</span>
-      <button class="icon-btn small" id="btnSort" title="Sort">↕️</button>
-    </div>
-    <div class="file-list" id="fileList"></div>
-
-    <div class="empty-state hidden" id="emptyState">
-      <div class="big">☁️</div>
-      <p>Nothing here yet. Upload a file or make a folder to get started.</p>
-    </div>
-    <div class="dragging-hint hidden" id="dragHint">Drop files here to upload to this folder</div>
-  </div>
-
-  <div id="view-categories" class="hidden"></div>
-  <div id="view-clean" class="hidden"></div>
-  <div id="view-me" class="hidden"></div>
-
-  <!-- ============ SELECTION TOOLBAR ============ -->
-  <div class="selection-bar hidden" id="selectionBar">
-    <span id="selectionCount">0 selected</span>
-    <div class="selection-actions">
-      <button class="icon-btn small" id="selMove" title="Move">📂</button>
-      <button class="icon-btn small" id="selDelete" title="Move to Trash">🗑️</button>
-      <button class="icon-btn small" id="selCancel" title="Cancel">✖️</button>
-    </div>
-  </div>
-
-  <!-- ============ FLOATING AI CHAT BUTTON ============ -->
-  <button class="ai-fab" id="btnOpenAiChat" title="AI Chat">💬</button>
-
-  <!-- ============ BOTTOM NAV ============ -->
-  <div class="bottom-nav">
-    <button class="nav-btn active" data-tab="home">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
-      Home<span class="nav-underline"></span>
-    </button>
-    <button class="nav-btn" data-tab="categories">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg>
-      Categories<span class="nav-underline"></span>
-    </button>
-    <button class="nav-btn" data-tab="clean">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M5 4l6 6M14 6l4-4M8 14l-4 6 6-4M13 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Clean<span class="nav-underline"></span>
-    </button>
-    <button class="nav-btn" data-tab="me">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="2.1"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
-      Me<span class="nav-underline"></span>
-    </button>
-  </div>
-
-  <div id="toast"></div>
-
-  <!-- ============ FULL-SCREEN AI CHAT ============ -->
-  <div class="overlay-full" id="aiChatOverlay">
-    <div class="ai-chat-screen">
-      <div class="ai-chat-header">
-        <button class="icon-btn small" id="btnCloseAiChat">✕</button>
-        <div class="ai-chat-title" id="aiChatSessionName">New chat</div>
-        <button class="icon-btn small" id="btnSessions" title="Chats">☰</button>
-        <button class="icon-btn small" id="btnNewSession" title="New chat">➕</button>
-      </div>
-      <div class="ai-chat-body" id="aiChatBody"></div>
-      <div class="ai-chat-inputbar">
-        <input class="field" id="aiOverlayInput" placeholder="Message RiNi AI…">
-        <button class="btn" id="aiOverlaySend">➤</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: sessions list ============ -->
-  <div class="overlay" id="sheetSessions">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2>Chats</h2>
-      <div class="action-row" id="sessionsList"></div>
-      <button class="btn secondary" id="btnNewSessionFromList" style="margin-top:12px;">➕ New chat</button>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: quick menu ============ -->
-  <div class="overlay" id="sheetMenu">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2>Quick actions</h2>
-      <div class="action-row">
-        <button class="action-item" data-act="new-folder">📁 New folder</button>
-        <button class="action-item" data-act="upload">⬆️ Upload file</button>
-        <button class="action-item" data-act="new-file">📄 New file</button>
-        <button class="action-item" data-act="select-mode">☑️ Select multiple</button>
-        <button class="action-item" data-act="refresh">🔄 Refresh from cloud</button>
-        <button class="action-item" data-act="about">ℹ️ About this app</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: item / folder actions ============ -->
-  <div class="overlay" id="sheetItem">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 id="itemSheetTitle">Item</h2>
-      <div class="action-row" id="itemActionRow"></div>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: details / properties ============ -->
-  <div class="overlay" id="sheetDetails">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2>Details</h2>
-      <div id="detailsBody"></div>
-      <button class="btn secondary" id="detailsClose" style="margin-top:12px;">Close</button>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: text input ============ -->
-  <div class="overlay" id="sheetInput">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 id="inputSheetTitle">Rename</h2>
-      <input class="field" id="inputSheetField" placeholder="">
-      <button class="btn" id="inputSheetConfirm">Save</button>
-      <button class="btn secondary" id="inputSheetCancel">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: confirm ============ -->
-  <div class="overlay" id="sheetConfirm">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 id="confirmTitle">Are you sure?</h2>
-      <p id="confirmMessage" style="color:var(--ink-soft); font-weight:500; margin:0 0 16px;"></p>
-      <button class="btn danger" id="confirmYes">Yes, continue</button>
-      <button class="btn secondary" id="confirmNo">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: text editor ============ -->
-  <div class="overlay" id="sheetEditor">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2 id="editorTitle">Edit file</h2>
-      <textarea class="field" id="editorField"></textarea>
-      <button class="btn" id="editorSave">Save to cloud</button>
-      <button class="btn secondary" id="editorCancel">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ============ SHEET: upload progress ============ -->
-  <div class="overlay" id="sheetUpload">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <h2>Uploading…</h2>
-      <div id="uploadFileName" style="font-weight:600;">file.name</div>
-      <div class="progress-line"><div id="uploadProgressFill"></div></div>
-    </div>
-  </div>
-
-  <input type="file" id="fileInputHidden" class="hidden" multiple>
-</div>
-
-<script>
-/* ======================================================================
-   RiNi Cloud OS — app logic
-   A cartoon-cloud file manager whose "disk" is a Telegram channel, plus a
-   full AI chat assistant (permanent memory in /ai-memories, ephemeral
-   per-session chat history, web search, rich text, file read/analyze).
-   ====================================================================== */
-const CFG = window.APP_CONFIG;
-const API = `https://api.telegram.org/bot${CFG.TELEGRAM_BOT_TOKEN}`;
-const FILEAPI = `https://api.telegram.org/file/bot${CFG.TELEGRAM_BOT_TOKEN}`;
-const CHAT_ID = CFG.TELEGRAM_CHAT_ID;
-const TRASH_PATH = '/.trash';
-const MEMORY_PATH = '/ai-memories';
-
-let state = {
-  index: { folders: ["/"], files: [], indexMessageId: null },
-  path: "/",
-  tab: "home",
-  search: "",
-  sortBy: "name",
-  loaded: false,
-  selectMode: false,
-  selected: new Set(),
-  // AI chat — purely in-memory; never written to localStorage or Telegram,
-  // so it disappears automatically when the page/session ends.
-  aiSessions: [],
-  currentSessionId: null,
-};
-
-document.addEventListener('contextmenu', (e)=>{ if(!e.target.closest('input,textarea')) e.preventDefault(); });
-document.addEventListener('selectstart', (e)=>{ if(!e.target.closest('input,textarea')) e.preventDefault(); });
-
-/* ---------------------------------------------------------------------
-   Sound effects
-   --------------------------------------------------------------------- */
-const Sound = (() => {
-  let ctx;
-  function ac(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
-  function tone(freq, start, dur, type='sine', gainPeak=0.18, glideTo=null){
-    const c = ac();
-    const osc = c.createOscillator(); const gain = c.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, start);
-    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, start+dur);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(gainPeak, start+0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start+dur);
-    osc.connect(gain).connect(c.destination);
-    osc.start(start); osc.stop(start+dur+0.02);
-  }
-  return {
-    tap(){ const c=ac(); tone(520, c.currentTime, 0.08, 'triangle', 0.12); },
-    success(){ const c=ac(); const t=c.currentTime; [523,659,784,988,1175].forEach((f,i)=> tone(f, t+i*0.08, 0.22, 'sine', 0.16, f*1.15)); },
-    organize(){ const c=ac(); const t=c.currentTime; [392,523,659,784,988,784,988,1319].forEach((f,i)=> tone(f, t+i*0.09, 0.28, i%2?'triangle':'sine', 0.15, f*1.3)); },
-    delete(){ const c=ac(); tone(420, c.currentTime, 0.32, 'sawtooth', 0.14, 90); },
-    error(){ const c=ac(); const t=c.currentTime; tone(180, t, 0.14, 'square', 0.12); tone(140, t+0.15, 0.22, 'square', 0.12); },
-    upload(){ const c=ac(); const t=c.currentTime; [300,500,760].forEach((f,i)=> tone(f, t+i*0.06, 0.16, 'triangle', 0.14, f*1.1)); },
-    ping(){ const c=ac(); tone(700, c.currentTime, 0.1, 'sine', 0.12, 900); }
-  };
-})();
-
-/* ---------------------------------------------------------------------
-   Telegram storage engine
-   --------------------------------------------------------------------- */
-async function tg(method, formOrParams){
-  const url = `${API}/${method}`;
-  let opts;
-  if (formOrParams instanceof FormData){ opts = { method:'POST', body: formOrParams }; }
-  else { opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formOrParams||{}) }; }
-  const res = await fetch(url, opts);
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.description || `${method} failed`);
-  return data.result;
-}
-function loadCache(){ try { const raw = localStorage.getItem(CFG.CACHE_KEY); if (raw) return JSON.parse(raw); } catch(e){} return null; }
-function saveCache(idx){ try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(idx)); } catch(e){} }
-
-async function fetchIndexFromChannel(){
-  const chat = await tg('getChat', { chat_id: CHAT_ID });
-  const pinned = chat.pinned_message;
-  if (pinned && pinned.document){
-    const file = await tg('getFile', { file_id: pinned.document.file_id });
-    const resp = await fetch(`${FILEAPI}/${file.file_path}`);
-    const json = await resp.json();
-    json.indexMessageId = pinned.message_id;
-    return json;
-  }
-  return null;
-}
-async function createFreshIndex(){
-  const fresh = { folders:["/"], files:[] };
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('document', new Blob([JSON.stringify(fresh)], {type:'application/json'}), 'index.json');
-  form.append('caption', '📇 RiNi Cloud index — do not delete this message');
-  const sent = await tg('sendDocument', form);
-  await tg('pinChatMessage', { chat_id: CHAT_ID, message_id: sent.message_id, disable_notification: true });
-  fresh.indexMessageId = sent.message_id;
-  return fresh;
-}
-async function persistIndex(){
-  const idx = state.index;
-  saveCache(idx);
-  const payload = { folders: idx.folders, files: idx.files };
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('message_id', idx.indexMessageId);
-  form.append('media', JSON.stringify({ type:'document', media:'attach://idxfile', caption:'📇 RiNi Cloud index — do not delete this message' }));
-  form.append('idxfile', new Blob([JSON.stringify(payload)], {type:'application/json'}), 'index.json');
-  try { await tg('editMessageMedia', form); }
-  catch(e){
-    const fresh = await createFreshIndex();
-    state.index.indexMessageId = fresh.indexMessageId;
-    saveCache(state.index);
-  }
-}
-async function bootIndex(){
-  const cached = loadCache();
-  if (cached) { state.index = cached; render(); }
-  try {
-    const remote = await fetchIndexFromChannel();
-    if (remote) { state.index = remote; }
-    else { state.index = await createFreshIndex(); }
-  } catch(e){
-    if (!cached){ toast("Couldn't reach your Telegram storage. Check the bot token / channel setup."); Sound.error(); }
-  }
-  state.loaded = true;
-  saveCache(state.index);
-  render();
-}
-
-/* ---------------------------------------------------------------------
-   Virtual filesystem helpers
-   --------------------------------------------------------------------- */
-function normPath(p){
-  if (!p) p = '/';
-  if (!p.startsWith('/')) p = '/'+p;
-  if (p.length>1 && p.endsWith('/')) p = p.slice(0,-1);
-  return p;
-}
-function joinPath(base, name){ return normPath(base === '/' ? '/'+name : base+'/'+name); }
-function parentPath(p){
-  if (p === '/') return '/';
-  const parts = p.split('/'); parts.pop();
-  const parent = parts.join('/');
-  return parent === '' ? '/' : parent;
-}
-function baseName(p){ const parts = p.split('/'); return parts[parts.length-1] || '/'; }
-function directSubfolders(path){ return state.index.folders.filter(f => f !== '/' && parentPath(f) === path); }
-function filesIn(path){ return state.index.files.filter(f => f.path === path && !f.trashed); }
-function folderStats(path){
-  const prefix = path === '/' ? '/' : path+'/';
-  const all = state.index.files.filter(f => !f.trashed && (f.path === path || f.path.startsWith(prefix)));
-  const size = all.reduce((s,f)=>s+f.size,0);
-  return { count: all.length, size };
-}
-function fmtSize(bytes){
-  if (bytes < 1024) return bytes+' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB';
-  if (bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1)+' MB';
-  return (bytes/1024/1024/1024).toFixed(2)+' GB';
-}
-function fileGlyph(mime, name){
-  const ext = (name.split('.').pop()||'').toLowerCase();
-  if ((mime||'').startsWith('image/')) return {emoji:'🖼️', cls:'c-mint'};
-  if ((mime||'').startsWith('video/')) return {emoji:'🎬', cls:'c-sky'};
-  if ((mime||'').startsWith('audio/')) return {emoji:'🎵', cls:'c-peach'};
-  if (['zip','rar','7z','tar','gz'].includes(ext)) return {emoji:'🗜️', cls:'c-lilac'};
-  if (['pdf'].includes(ext)) return {emoji:'📕', cls:'c-blush'};
-  if (['doc','docx','txt','md','note','json','csv'].includes(ext)) return {emoji:'📄', cls:'c-butter'};
-  return {emoji:'📦', cls:'c-sky'};
-}
-function fileCategory(mime, name){
-  const ext = (name.split('.').pop()||'').toLowerCase();
-  if ((mime||'').startsWith('image/')) return 'Images';
-  if ((mime||'').startsWith('video/')) return 'Videos';
-  if ((mime||'').startsWith('audio/')) return 'Audio';
-  if (['zip','rar','7z','tar','gz'].includes(ext)) return 'Archives';
-  if (['pdf','doc','docx','txt','md','note','json','csv'].includes(ext)) return 'Documents';
-  return 'Other';
-}
-function sortFiles(list){
-  const arr = [...list];
-  if (state.sortBy==='name') arr.sort((a,b)=> a.name.localeCompare(b.name));
-  else if (state.sortBy==='size') arr.sort((a,b)=> b.size-a.size);
-  else if (state.sortBy==='date') arr.sort((a,b)=> (b.date||0)-(a.date||0));
-  return arr;
-}
-function copyToClipboard(text){
-  if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>{ toast('Path copied'); Sound.tap(); }).catch(()=> toast('Could not copy'));
-  } else { toast('Clipboard not available'); }
-}
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function isTextLikeFile(name, mime){
-  return /\.(txt|md|note|json|csv|js|ts|jsx|tsx|py|html|css|xml|yml|yaml|c|cpp|h|java|sh|log|ini|conf)$/i.test(name) || (mime||'').startsWith('text/');
-}
-
-/* ---------------------------------------------------------------------
-   Core file/folder operations
-   --------------------------------------------------------------------- */
-async function opCreateFolder(path){
-  const p = normPath(path);
-  if (!state.index.folders.includes(p)) state.index.folders.push(p);
-  await persistIndex();
-}
-async function opDeleteFolder(path){
-  const p = normPath(path);
-  const prefix = p==='/' ? '/' : p+'/';
-  const toTrash = state.index.files.filter(f=> !f.trashed && (f.path===p || f.path.startsWith(prefix)));
-  toTrash.forEach(f=>{ f.trashedFrom = f.path; f.trashed = true; f.trashedAt = Date.now(); f.path = TRASH_PATH; });
-  state.index.folders = state.index.folders.filter(f=> !(f===p || f.startsWith(prefix)));
-  await persistIndex();
-}
-async function opMoveFolderPath(fromPath, toPath){
-  const from = normPath(fromPath), to = normPath(toPath);
-  if (from==='/' || from===to) return;
-  const fromPrefix = from+'/';
-  state.index.folders = state.index.folders.map(f=>{
-    if (f===from) return to;
-    if (f.startsWith(fromPrefix)) return to + f.slice(from.length);
-    return f;
-  });
-  state.index.files.forEach(f=>{
-    if (f.trashed) return;
-    if (f.path===from) f.path = to;
-    else if (f.path.startsWith(fromPrefix)) f.path = to + f.path.slice(from.length);
-  });
-  if (!state.index.folders.includes(to)) state.index.folders.push(to);
-  if (state.path===from) state.path = to;
-  else if (state.path.startsWith(fromPrefix)) state.path = to + state.path.slice(from.length);
-  await persistIndex();
-}
-async function opRenameFolder(path, newName){
-  const p = normPath(path);
-  if (p==='/') return;
-  await opMoveFolderPath(p, joinPath(parentPath(p), newName));
-}
-async function opCreateTextFile(path, name, content){
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('document', new Blob([content],{type:'text/plain'}), name);
-  form.append('caption', normPath(path));
-  const sent = await tg('sendDocument', form);
-  const f = { id:'f_'+sent.message_id, messageId:sent.message_id, fileId:sent.document.file_id,
-    name, path: normPath(path), size: sent.document.file_size||new Blob([content]).size,
-    mime:'text/plain', date: Date.now() };
-  state.index.files.push(f);
-  await persistIndex();
-  return f;
-}
-async function opUploadFile(path, file){
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('document', file, file.name);
-  form.append('caption', normPath(path));
-  const sent = await tg('sendDocument', form);
-  const f = { id:'f_'+sent.message_id, messageId:sent.message_id, fileId:sent.document.file_id,
-    name:file.name, path: normPath(path), size: sent.document.file_size||file.size,
-    mime:file.type||'application/octet-stream', date: Date.now() };
-  state.index.files.push(f);
-  await persistIndex();
-  return f;
-}
-async function opRenameFile(id, newName){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f || !newName) return;
-  f.name = newName;
-  await persistIndex();
-}
-async function opMoveFile(id, toPath){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f) return;
-  const to = normPath(toPath);
-  if (to!=='/' && !state.index.folders.includes(to)) state.index.folders.push(to);
-  f.path = to;
-  await persistIndex();
-}
-async function opDeleteFile(id){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f || f.trashed) return;
-  f.trashedFrom = f.path; f.trashed = true; f.trashedAt = Date.now(); f.path = TRASH_PATH;
-  await persistIndex();
-}
-async function opRestoreFile(id){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f || !f.trashed) return;
-  const target = normPath(f.trashedFrom || '/');
-  if (target!=='/' && !state.index.folders.includes(target)) state.index.folders.push(target);
-  f.path = target; f.trashed = false; delete f.trashedFrom; delete f.trashedAt;
-  await persistIndex();
-}
-async function opPermanentlyDeleteFile(id){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f) return;
-  try { await tg('deleteMessage', {chat_id:CHAT_ID, message_id:f.messageId}); } catch(e){}
-  state.index.files = state.index.files.filter(x=>x.id!==id);
-  await persistIndex();
-}
-async function opEmptyTrash(){
-  const trashed = state.index.files.filter(f=>f.trashed);
-  for (const f of trashed){ try { await tg('deleteMessage', {chat_id:CHAT_ID, message_id:f.messageId}); } catch(e){} }
-  state.index.files = state.index.files.filter(f=>!f.trashed);
-  await persistIndex();
-}
-async function opEditTextFile(id, newContent){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f) return;
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('message_id', f.messageId);
-  form.append('media', JSON.stringify({type:'document', media:'attach://f', caption:f.path}));
-  form.append('f', new Blob([newContent], {type:'text/plain'}), f.name);
-  await tg('editMessageMedia', form);
-  f.size = new Blob([newContent]).size;
-  await persistIndex();
-}
-async function opDuplicateFile(id){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f) return;
-  const file = await tg('getFile', {file_id: f.fileId});
-  const resp = await fetch(`${FILEAPI}/${file.file_path}`);
-  const blob = await resp.blob();
-  const dot = f.name.lastIndexOf('.');
-  const newName = dot>0 ? f.name.slice(0,dot)+' (copy)'+f.name.slice(dot) : f.name+' (copy)';
-  const form = new FormData();
-  form.append('chat_id', CHAT_ID);
-  form.append('document', blob, newName);
-  form.append('caption', f.path);
-  const sent = await tg('sendDocument', form);
-  state.index.files.push({ id:'f_'+sent.message_id, messageId:sent.message_id, fileId:sent.document.file_id, name:newName, path:f.path, size: sent.document.file_size||blob.size, mime:f.mime, date: Date.now() });
-  await persistIndex();
-}
-async function readFileContentById(id){
-  const f = state.index.files.find(x=>x.id===id);
-  if (!f || !isTextLikeFile(f.name, f.mime)) return null;
-  try {
-    const file = await tg('getFile', {file_id: f.fileId});
-    return await (await fetch(`${FILEAPI}/${file.file_path}`)).text();
-  } catch(e){ return null; }
-}
-async function opSaveMemory(name, content){
-  if (!state.index.folders.includes(MEMORY_PATH)) state.index.folders.push(MEMORY_PATH);
-  let fname = (name||'').trim() || ('memory-'+Date.now()+'.txt');
-  if (!fname.includes('.')) fname += '.txt';
-  const existing = state.index.files.find(f=> !f.trashed && f.path===MEMORY_PATH && f.name.toLowerCase()===fname.toLowerCase());
-  if (existing){ await opEditTextFile(existing.id, content); return existing; }
-  return await opCreateTextFile(MEMORY_PATH, fname, content);
-}
-
-/* ---- bulk operations (multi-select) ---- */
-async function opBulkMove(ids, toPath){
-  const to = normPath(toPath);
-  if (to!=='/' && !state.index.folders.includes(to)) state.index.folders.push(to);
-  ids.forEach(id=>{ const f=state.index.files.find(x=>x.id===id); if(f && !f.trashed) f.path=to; });
-  await persistIndex();
-}
-async function opBulkTrash(ids){
-  ids.forEach(id=>{
-    const f = state.index.files.find(x=>x.id===id);
-    if (f && !f.trashed){ f.trashedFrom=f.path; f.trashed=true; f.trashedAt=Date.now(); f.path=TRASH_PATH; }
-  });
-  await persistIndex();
-}
-
-/* ---------------------------------------------------------------------
-   Rendering — file manager views
-   --------------------------------------------------------------------- */
-function renderCrumbs(){
-  const crumbs = document.getElementById('crumbs');
-  const parts = state.path === '/' ? [] : state.path.split('/').filter(Boolean);
-  let acc = '';
-  let html = `<button class="crumb ${state.path==='/'?'current':''}" data-p="/">Home</button>`;
-  parts.forEach((p)=>{ acc += '/'+p; html += `<button class="crumb ${acc===state.path?'current':''}" data-p="${acc}">${p}</button>`; });
-  crumbs.innerHTML = html;
-  crumbs.querySelectorAll('.crumb').forEach(b=> b.onclick = ()=>{ Sound.tap(); state.path = b.dataset.p; render(); });
-  document.getElementById('btnBack').disabled = state.path === '/';
-}
-function renderStorage(){
-  const allFiles = state.index.files;
-  const totalBytes = allFiles.reduce((s,f)=>s+f.size,0);
-  const activeFolders = state.index.folders.length-1;
-  document.getElementById('storageUsedText').textContent = fmtSize(totalBytes)+' used';
-  document.getElementById('storageSub').textContent = `${allFiles.filter(f=>!f.trashed).length} file${allFiles.length===1?'':'s'} • ${activeFolders} folder${activeFolders===1?'':'s'}`;
-  const pct = Math.min(96, 6 + Math.log2(1+totalBytes/1e6)*6);
-  document.getElementById('storageBar').style.width = pct+'%';
-  const byCat = {};
-  allFiles.forEach(f=>{ const c=fileCategory(f.mime,f.name); byCat[c]=(byCat[c]||0)+f.size; });
-  const wrap = document.getElementById('typeBreakdown');
-  wrap.innerHTML = Object.keys(byCat).length ? Object.entries(byCat).map(([k,v])=>`<span class="type-pill">${k} · ${fmtSize(v)}</span>`).join('') : `<span class="type-pill">No files yet</span>`;
-}
-const PALETTE = ['c-mint','c-sky','c-butter','c-blush','c-lilac','c-peach'];
-function folderCardHTML(path, colorClass){
-  const name = baseName(path);
-  const stats = folderStats(path);
-  return `
-    <div class="folder-card ${colorClass}" data-folder="${path}">
-      <button class="folder-more" data-foldermore="${path}">⋮</button>
-      <div class="folder-glyph">📁</div>
-      <div class="folder-name">${name}</div>
-      <div class="folder-meta">${stats.count} item${stats.count===1?'':'s'} • ${fmtSize(stats.size)}</div>
-    </div>`;
-}
-function fileRowHTML(f, showPath){
-  const g = fileGlyph(f.mime, f.name);
-  const checked = state.selected.has(f.id);
-  const leftHtml = state.selectMode
-    ? `<div class="select-check ${checked?'checked':''}">${checked?'✓':''}</div>`
-    : `<div class="folder-glyph ${g.cls}">${g.emoji}</div>`;
-  return `<div class="file-row ${checked?'row-selected':''}" data-fid="${f.id}">
-    ${leftHtml}
-    <div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)}${showPath? ' • '+f.path : ''}</div></div>
-    ${state.selectMode ? '' : `<button class="file-more" data-more="${f.id}">⋮</button>`}
-  </div>`;
-}
-function wireFileRows(container){
-  container.querySelectorAll('.file-row').forEach(row=> row.onclick = (e)=>{
-    if (state.selectMode){
-      const id = row.dataset.fid;
-      if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
-      Sound.tap(); render(); return;
-    }
-    if(e.target.closest('.file-more')) return;
-    openItemSheet(row.dataset.fid);
-  });
-  container.querySelectorAll('[data-more]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openItemSheet(b.dataset.more); });
-}
-
-function renderHome(){
-  renderCrumbs();
-  renderStorage();
-  const q = state.search.trim().toLowerCase();
-  const grid = document.getElementById('folderGrid');
-  const fileListEl = document.getElementById('fileList');
-  const filesLabel = document.getElementById('filesLabel');
-  const emptyState = document.getElementById('emptyState');
-
-  let subfolders = directSubfolders(state.path);
-  let files = filesIn(state.path);
-  if (q){
-    subfolders = state.index.folders.filter(f=> f!=='/' && baseName(f).toLowerCase().includes(q));
-    files = state.index.files.filter(f=> !f.trashed && f.name.toLowerCase().includes(q));
-  }
-  files = sortFiles(files);
-
-  grid.innerHTML = subfolders.map((f,i)=> folderCardHTML(f, PALETTE[i%PALETTE.length])).join('') +
-    (q || state.selectMode ? '' : `<button class="folder-card new" data-newfolder="1">
-        <div class="folder-glyph">➕</div><div class="folder-name">New folder</div><div class="folder-meta">create one</div>
-      </button>`);
-  grid.querySelectorAll('[data-folder]').forEach(elc=> elc.onclick = (e)=>{
-    if (e.target.closest('[data-foldermore]')) return;
-    Sound.tap(); state.path = elc.dataset.folder; state.search=''; document.getElementById('searchInput').value=''; render();
-  });
-  grid.querySelectorAll('[data-foldermore]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); openFolderSheet(b.dataset.foldermore); });
-  grid.querySelectorAll('[data-folder]').forEach(card=>{
-    card.addEventListener('dragover', (e)=>{ e.preventDefault(); card.classList.add('dragover'); });
-    card.addEventListener('dragleave', ()=> card.classList.remove('dragover'));
-    card.addEventListener('drop', async (e)=>{ e.preventDefault(); card.classList.remove('dragover'); await handleDroppedFiles(e.dataTransfer.files, card.dataset.folder); });
-  });
-  const nf = grid.querySelector('[data-newfolder]');
-  if (nf) nf.onclick = ()=>{ Sound.tap(); openNewFolder(); };
-
-  if (files.length){ filesLabel.classList.remove('hidden'); fileListEl.innerHTML = files.map(f=> fileRowHTML(f, !!q)).join(''); wireFileRows(fileListEl); }
-  else { filesLabel.classList.add('hidden'); fileListEl.innerHTML = ''; }
-  emptyState.classList.toggle('hidden', !(subfolders.length===0 && files.length===0));
-  updateSelectionBar();
-}
-
-function renderCategories(){
-  const view = document.getElementById('view-categories');
-  const cats = ['Images','Videos','Audio','Documents','Archives','Other'];
-  const counts = {};
-  cats.forEach(c=> counts[c] = {count:0,size:0});
-  state.index.files.filter(f=>!f.trashed).forEach(f=>{ const c=fileCategory(f.mime,f.name); counts[c].count++; counts[c].size+=f.size; });
-  view.innerHTML = `
-    <div class="section-label">Categories <span class="twinkle">✦</span></div>
-    <div class="folder-grid" id="catGrid"></div>
-    <div class="section-label hidden" id="catFilesLabel">Files</div>
-    <div class="file-list" id="catFileList"></div>`;
-  const grid = view.querySelector('#catGrid');
-  const glyphs = {Images:'🖼️',Videos:'🎬',Audio:'🎵',Documents:'📄',Archives:'🗜️',Other:'📦'};
-  grid.innerHTML = cats.map((c,i)=> `
-    <button class="folder-card ${PALETTE[i%PALETTE.length]}" data-cat="${c}">
-      <div class="folder-glyph">${glyphs[c]}</div><div class="folder-name">${c}</div>
-      <div class="folder-meta">${counts[c].count} · ${fmtSize(counts[c].size)}</div>
-    </button>`).join('');
-  grid.querySelectorAll('[data-cat]').forEach(b=> b.onclick=()=>{
-    Sound.tap();
-    const c = b.dataset.cat;
-    const files = sortFiles(state.index.files.filter(f=> !f.trashed && fileCategory(f.mime,f.name)===c));
-    const label = view.querySelector('#catFilesLabel'); const list = view.querySelector('#catFileList');
-    label.classList.remove('hidden'); label.textContent = c;
-    list.innerHTML = files.map(f=> fileRowHTML(f, true)).join('') || `<div class="empty-state"><p>No files in this category yet.</p></div>`;
-    wireFileRows(list);
-  });
-}
-
-function renderClean(){
-  const view = document.getElementById('view-clean');
-  const files = state.index.files.filter(f=>!f.trashed);
-  const large = [...files].sort((a,b)=>b.size-a.size).slice(0,8);
-  const emptyFolders = state.index.folders.filter(f=> f!=='/' && directSubfolders(f).length===0 && filesIn(f).length===0);
-  const trashedFiles = state.index.files.filter(f=>f.trashed);
-  const totalBytes = state.index.files.reduce((s,f)=>s+f.size,0);
-  view.innerHTML = `
-    <div class="storage-card">
-      <div class="storage-top"><div class="storage-icon">🧹</div>
-        <div><div class="storage-title">Storage Analysis</div><div class="storage-sub">${files.length} files • ${fmtSize(totalBytes)} total (incl. Trash)</div></div>
-      </div>
-    </div>
-    <div class="section-label">Largest files</div><div class="file-list" id="cleanLarge"></div>
-    <div class="section-label">Empty folders</div><div class="file-list" id="cleanEmptyFolders"></div>
-    <div class="section-label">Trash <span class="twinkle">${trashedFiles.length}</span></div><div class="file-list" id="trashList"></div>
-    <div class="settings-list">
-      ${trashedFiles.length ? '<div class="settings-item" id="btnEmptyTrash">Empty Trash<small>Permanently delete all trashed files</small></div>' : ''}
-      <div class="settings-item" id="btnClearCache">Clear local cache<small>Re-download the index from your channel next launch</small></div>
-    </div>`;
-  const largeEl = view.querySelector('#cleanLarge');
-  largeEl.innerHTML = large.length ? large.map(f=> fileRowHTML(f, true)).join('') : `<div class="empty-state"><p>No files yet.</p></div>`;
-  wireFileRows(largeEl);
-  const efEl = view.querySelector('#cleanEmptyFolders');
-  efEl.innerHTML = emptyFolders.length ? emptyFolders.map(f=> `
-    <div class="file-row"><div class="folder-glyph c-lilac">📁</div><div class="file-info"><div class="file-name">${f}</div><div class="file-meta">empty</div></div>
-    <button class="file-more" data-delfolder="${f}">🗑️</button></div>`).join('') : `<div class="empty-state"><p>No empty folders. Tidy!</p></div>`;
-  efEl.querySelectorAll('[data-delfolder]').forEach(b=> b.onclick=()=>{
-    confirmAction('Delete empty folder?', `"${baseName(b.dataset.delfolder)}" will be removed.`, async ()=>{ await opDeleteFolder(b.dataset.delfolder); Sound.delete(); toast('Folder removed'); render(); });
-  });
-  const trashEl = view.querySelector('#trashList');
-  trashEl.innerHTML = trashedFiles.length ? trashedFiles.map(f=>{
-    const g = fileGlyph(f.mime,f.name);
-    return `<div class="file-row"><div class="folder-glyph ${g.cls}">${g.emoji}</div>
-      <div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${fmtSize(f.size)} • was ${f.trashedFrom||'/'}</div></div>
-      <button class="file-more" data-restore="${f.id}" title="Restore">♻️</button>
-      <button class="file-more" data-forget="${f.id}" title="Delete forever" style="margin-left:6px;">🗑️</button></div>`;
-  }).join('') : `<div class="empty-state"><p>Trash is empty.</p></div>`;
-  trashEl.querySelectorAll('[data-restore]').forEach(b=> b.onclick=async()=>{ await opRestoreFile(b.dataset.restore); Sound.success(); toast('Restored'); render(); });
-  trashEl.querySelectorAll('[data-forget]').forEach(b=> b.onclick=()=>{
-    confirmAction('Delete forever?', 'This permanently removes the file from your cloud storage. This cannot be undone.', async ()=>{ await opPermanentlyDeleteFile(b.dataset.forget); Sound.delete(); toast('Permanently deleted'); render(); });
-  });
-  const emptyTrashBtn = view.querySelector('#btnEmptyTrash');
-  if (emptyTrashBtn) emptyTrashBtn.onclick = ()=> confirmAction('Empty Trash?', `${trashedFiles.length} file(s) will be permanently deleted. This cannot be undone.`, async ()=>{ await opEmptyTrash(); Sound.delete(); toast('Trash emptied'); render(); });
-  view.querySelector('#btnClearCache').onclick = ()=>{ localStorage.removeItem(CFG.CACHE_KEY); toast('Local cache cleared'); Sound.tap(); };
-}
-
-function renderMe(){
-  const view = document.getElementById('view-me');
-  const signedIn = puterSignedIn();
-  view.innerHTML = `
-    <div class="me-card">
-      <div class="me-row">
-        <div class="me-avatar">👤</div>
-        <div>
-          <div class="me-name">${signedIn ? (puterUserCache?.username || 'Signed in') : 'Not signed in'}</div>
-          <div class="me-sub"><span class="status-dot ${signedIn?'dot-on':'dot-off'}"></span>${signedIn ? 'Puter account connected' : 'Sign in to unlock AI tools'}</div>
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
         </div>
-      </div>
-      <button class="btn" id="btnPuterAuth" style="margin-top:16px;">${signedIn ? 'Sign out of Puter' : 'Sign up / Log in with Puter'}</button>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="userInput" rows="1" placeholder="Ask me anything..." 
+                          onkeydown="handleInputKeydown(event)"></textarea>
+                <div class="input-actions">
+                    <button onclick="document.getElementById('fileInput').click()" title="Upload file">📎</button>
+                    <button onclick="sendMessage()" class="send">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="fileInput" style="display:none" multiple 
+               onchange="handleFiles(this.files)">
+
+        <!-- File drop zone -->
+        <div class="file-drop-zone" id="fileDropZone">
+            <div class="icon">📁</div>
+            <div class="text">Drop files here</div>
+            <div class="sub">or click to browse</div>
+        </div>
     </div>
-    <button class="btn btn-organize-me" id="btnOrganizeMe" ${signedIn?'':'disabled'}>✨ One-tap Organize</button>
-    <div class="ai-panel">
-      <h3>🤖 AI Assistant</h3>
-      <p>${signedIn ? 'Open the chat to create, move, delete, restore, or organize files, save long-term memories, search the web, or read/analyze text and code files.' : 'Sign in with Puter above, then tap the chat bubble anywhere in the app to talk to the AI.'}</p>
-      <button class="btn" id="btnOpenAiFromMe">💬 Open AI Chat</button>
-    </div>
-    <div class="section-label">Settings</div>
-    <div class="settings-list">
-      <div class="settings-item" id="meAbout">About RiNi Cloud OS <small>Version 1.3 • Telegram-backed storage</small></div>
-      <div class="settings-item" id="meChannel">Storage channel <small>Chat ID ••••${String(CHAT_ID).slice(-4)}</small></div>
-      <div class="settings-item" id="meRefresh">Refresh from cloud <small>Re-sync the index now</small></div>
-    </div>`;
-  view.querySelector('#btnPuterAuth').onclick = async ()=>{
-    Sound.tap();
-    if (signedIn){ await puter.auth.signOut(); toast('Signed out'); }
-    else { try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); toast('Signed in!'); } catch(e){ toast('Sign-in cancelled'); } }
-    renderMe();
-  };
-  view.querySelector('#btnOrganizeMe').onclick = async ()=>{
-    Sound.tap();
-    if (!puterSignedIn()){ toast('Sign in with Puter first'); return; }
-    const btn = view.querySelector('#btnOrganizeMe');
-    btn.disabled = true; btn.textContent = '✨ Organizing…';
-    try { await aiAutoOrganize(); Sound.organize(); toast('Files organized ✨'); }
-    catch(e){ toast('Organize failed — try again'); Sound.error(); }
-    render();
-  };
-  view.querySelector('#btnOpenAiFromMe').onclick = ()=> openAiChatOverlay();
-  view.querySelector('#meRefresh').onclick = async ()=>{ Sound.tap(); await bootIndex(); toast('Synced'); };
-  view.querySelector('#meAbout').onclick = ()=> toast('RiNi Cloud OS — your files, stored as an unlimited Telegram channel ☁️');
-}
 
-function updateSelectionBar(){
-  const bar = document.getElementById('selectionBar');
-  bar.classList.toggle('hidden', !state.selectMode);
-  document.getElementById('selectionCount').textContent = state.selected.size + ' selected';
-  document.getElementById('selMove').disabled = state.selected.size===0;
-  document.getElementById('selDelete').disabled = state.selected.size===0;
-  document.getElementById('btnOpenAiChat').classList.toggle('hidden', state.selectMode);
-}
+    <script>
+        // ============================================
+        //  COMPLETE BOT IMPLEMENTATION
+        // ============================================
 
-function render(){
-  document.getElementById('view-home').classList.toggle('hidden', state.tab!=='home');
-  document.getElementById('view-categories').classList.toggle('hidden', state.tab!=='categories');
-  document.getElementById('view-clean').classList.toggle('hidden', state.tab!=='clean');
-  document.getElementById('view-me').classList.toggle('hidden', state.tab!=='me');
-  document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===state.tab));
-  const onHome = state.tab==='home';
-  document.getElementById('btnBack').classList.toggle('hidden', !onHome);
-  document.getElementById('crumbs').classList.toggle('hidden', !onHome);
-  document.getElementById('searchBarWrap').classList.toggle('hidden', !onHome);
-  if (state.tab==='home') renderHome();
-  else if (state.tab==='categories') renderCategories();
-  else if (state.tab==='clean') renderClean();
-  else if (state.tab==='me') renderMe();
-  updateSelectionBar();
-}
+        // === CONFIGURATION ===
+        const CONFIG = {
+            telegram: {
+                channelId: '-1003953146702',
+                botToken: '8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E',
+                baseUrl: 'https://api.telegram.org/bot8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E'
+            }
+        };
 
-/* ---------------------------------------------------------------------
-   Toast
-   --------------------------------------------------------------------- */
-let toastTimer;
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=> t.classList.remove('show'), 2400);
-}
+        // === STATE ===
+        let state = {
+            userId: localStorage.getItem('memory_bot_user') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+            messages: [],
+            files: [],
+            isProcessing: false,
+            messageCounter: 0
+        };
 
-/* ---------------------------------------------------------------------
-   Sheets
-   --------------------------------------------------------------------- */
-function openSheet(id){ document.getElementById(id).classList.add('show'); }
-function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
-document.querySelectorAll('.overlay').forEach(ov=> ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); }));
+        localStorage.setItem('memory_bot_user', state.userId);
 
-function promptInput(title, initial, placeholder, onConfirm){
-  document.getElementById('inputSheetTitle').textContent = title;
-  const field = document.getElementById('inputSheetField');
-  field.value = initial||''; field.placeholder = placeholder||'';
-  openSheet('sheetInput');
-  document.getElementById('inputSheetConfirm').onclick = async ()=>{
-    const val = field.value.trim(); if (!val) return;
-    closeSheet('sheetInput'); await onConfirm(val);
-  };
-  document.getElementById('inputSheetCancel').onclick = ()=> closeSheet('sheetInput');
-}
-function confirmAction(title, message, onYes){
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  openSheet('sheetConfirm');
-  document.getElementById('confirmYes').onclick = async ()=>{ closeSheet('sheetConfirm'); await onYes(); };
-  document.getElementById('confirmNo').onclick = ()=> closeSheet('sheetConfirm');
-}
-function openDetails(f){
-  document.getElementById('detailsBody').innerHTML = `
-    <div><b>Name:</b> ${escapeHtml(f.name)}</div>
-    <div><b>Path:</b> ${escapeHtml(f.path)}</div>
-    <div><b>Size:</b> ${fmtSize(f.size)}</div>
-    <div><b>Type:</b> ${escapeHtml(f.mime||'unknown')}</div>
-    <div><b>Added:</b> ${f.date ? new Date(f.date).toLocaleString() : 'unknown'}</div>`;
-  openSheet('sheetDetails');
-  document.getElementById('detailsClose').onclick = ()=> closeSheet('sheetDetails');
-}
-function openNewFolder(){
-  promptInput('New folder', '', 'Folder name', async (name)=>{ await opCreateFolder(joinPath(state.path, name)); Sound.success(); toast('Folder created'); render(); });
-}
-function openNewFile(){
-  promptInput('New file', '', 'filename.txt', (name)=>{
-    let fname = name.trim() || 'file.txt';
-    if (!fname.includes('.')) fname += '.txt';
-    document.getElementById('editorTitle').textContent = 'New file — '+fname;
-    document.getElementById('editorField').value = '';
-    openSheet('sheetEditor');
-    document.getElementById('editorSave').onclick = async ()=>{
-      const text = document.getElementById('editorField').value;
-      closeSheet('sheetEditor');
-      try { await opCreateTextFile(state.path, fname, text); Sound.success(); toast('File saved to cloud — in '+state.path); }
-      catch(e){ toast('Upload failed'); Sound.error(); }
-      render();
-    };
-    document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
-  });
-}
-function openItemSheet(fileId){
-  const f = state.index.files.find(x=>x.id===fileId);
-  if (!f) return;
-  const isText = isTextLikeFile(f.name, f.mime);
-  const isImage = (f.mime||'').startsWith('image/');
-  document.getElementById('itemSheetTitle').textContent = f.name;
-  const row = document.getElementById('itemActionRow');
-  row.innerHTML = `
-    <button class="action-item" data-a="download">⬇️ Download</button>
-    ${isImage ? '<button class="action-item" data-a="preview">👁️ Preview</button>' : ''}
-    ${isText ? '<button class="action-item" data-a="edit">✏️ Edit content</button>' : ''}
-    <button class="action-item" data-a="rename">🔤 Rename</button>
-    <button class="action-item" data-a="move">📂 Change path / move</button>
-    <button class="action-item" data-a="duplicate">📑 Duplicate</button>
-    <button class="action-item" data-a="copy">🔗 Copy path</button>
-    <button class="action-item" data-a="details">ℹ️ Details</button>
-    <button class="action-item danger-text" data-a="delete">🗑️ Move to Trash</button>`;
-  openSheet('sheetItem');
-  row.querySelector('[data-a="download"]').onclick = async ()=>{
-    closeSheet('sheetItem');
-    try {
-      const file = await tg('getFile', { file_id: f.fileId });
-      const url = `${FILEAPI}/${file.file_path}`;
-      const a = document.createElement('a'); a.href = url; a.download = f.name; a.target='_blank';
-      document.body.appendChild(a); a.click(); a.remove(); Sound.tap();
-    } catch(e){ toast('Could not fetch the download link'); Sound.error(); }
-  };
-  const prevBtn = row.querySelector('[data-a="preview"]');
-  if (prevBtn) prevBtn.onclick = async ()=>{
-    closeSheet('sheetItem');
-    try { const file = await tg('getFile', { file_id: f.fileId }); window.open(`${FILEAPI}/${file.file_path}`, '_blank'); }
-    catch(e){ toast('Preview failed'); Sound.error(); }
-  };
-  const editBtn = row.querySelector('[data-a="edit"]');
-  if (editBtn) editBtn.onclick = async ()=>{
-    closeSheet('sheetItem');
-    try {
-      const content = await readFileContentById(f.id);
-      document.getElementById('editorTitle').textContent = 'Edit — '+f.name;
-      document.getElementById('editorField').value = content||'';
-      openSheet('sheetEditor');
-      document.getElementById('editorSave').onclick = async ()=>{
-        const newText = document.getElementById('editorField').value;
-        closeSheet('sheetEditor');
-        try { await opEditTextFile(f.id, newText); Sound.success(); toast('Saved'); }
-        catch(err){ toast('Could not save'); Sound.error(); }
-        render();
-      };
-      document.getElementById('editorCancel').onclick = ()=> closeSheet('sheetEditor');
-    } catch(e){ toast('Could not load content'); Sound.error(); }
-  };
-  row.querySelector('[data-a="rename"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    promptInput('Rename file', f.name, 'File name', async (val)=>{ await opRenameFile(f.id, val); Sound.success(); toast('Renamed'); render(); });
-  };
-  row.querySelector('[data-a="move"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    promptInput('Move to path', f.path, '/Folder/Subfolder', async (val)=>{ await opMoveFile(f.id, val); Sound.success(); toast('Moved'); render(); });
-  };
-  row.querySelector('[data-a="duplicate"]').onclick = async ()=>{
-    closeSheet('sheetItem');
-    try { await opDuplicateFile(f.id); Sound.success(); toast('Duplicated'); render(); }
-    catch(e){ toast('Duplicate failed'); Sound.error(); }
-  };
-  row.querySelector('[data-a="copy"]').onclick = ()=>{ closeSheet('sheetItem'); copyToClipboard((f.path==='/'?'':f.path)+'/'+f.name); };
-  row.querySelector('[data-a="details"]').onclick = ()=>{ closeSheet('sheetItem'); openDetails(f); };
-  row.querySelector('[data-a="delete"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    confirmAction('Move to Trash?', `"${f.name}" will be moved to Trash. You can restore it later from Clean → Trash.`, async ()=>{ await opDeleteFile(f.id); Sound.delete(); toast('Moved to Trash'); render(); });
-  };
-}
-function openFolderSheet(path){
-  document.getElementById('itemSheetTitle').textContent = baseName(path);
-  const row = document.getElementById('itemActionRow');
-  row.innerHTML = `
-    <button class="action-item" data-a="open">📂 Open folder</button>
-    <button class="action-item" data-a="copy">🔗 Copy path</button>
-    <button class="action-item" data-a="rename">🔤 Rename folder</button>
-    <button class="action-item" data-a="move">📦 Move folder</button>
-    <button class="action-item danger-text" data-a="delete">🗑️ Delete folder</button>`;
-  openSheet('sheetItem');
-  row.querySelector('[data-a="open"]').onclick = ()=>{ closeSheet('sheetItem'); Sound.tap(); state.path = path; render(); };
-  row.querySelector('[data-a="copy"]').onclick = ()=>{ closeSheet('sheetItem'); copyToClipboard(path); };
-  row.querySelector('[data-a="rename"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    promptInput('Rename folder', baseName(path), 'Folder name', async (val)=>{ await opRenameFolder(path, val); Sound.success(); toast('Folder renamed'); render(); });
-  };
-  row.querySelector('[data-a="move"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    promptInput('Move folder to path', path, '/NewParent', async (val)=>{
-      const newPath = joinPath(normPath(val), baseName(path));
-      await opMoveFolderPath(path, newPath); Sound.success(); toast('Folder moved'); render();
-    });
-  };
-  row.querySelector('[data-a="delete"]').onclick = ()=>{
-    closeSheet('sheetItem');
-    confirmAction('Delete folder?', `Everything inside "${baseName(path)}" moves to Trash, and the folder itself is removed. You can restore individual files later.`, async ()=>{
-      await opDeleteFolder(path); Sound.delete(); toast('Folder deleted');
-      if (state.path===path || state.path.startsWith(path+'/')) state.path = parentPath(path);
-      render();
-    });
-  };
-}
+        // === TELEGRAM STORAGE CLASS ===
+        class TelegramStorage {
+            constructor() {
+                this.channelId = CONFIG.telegram.channelId;
+                this.baseUrl = CONFIG.telegram.baseUrl;
+                this.userId = state.userId;
+            }
 
-/* ---- selection mode ---- */
-function toggleSelectMode(){ state.selectMode = !state.selectMode; state.selected.clear(); render(); }
-document.getElementById('selCancel').onclick = ()=>{ Sound.tap(); toggleSelectMode(); };
-document.getElementById('selMove').onclick = ()=>{
-  if (!state.selected.size) return;
-  const count = state.selected.size;
-  promptInput(`Move ${count} item${count===1?'':'s'} to`, state.path, '/Folder', async (val)=>{
-    await opBulkMove([...state.selected], val); Sound.success(); toast('Moved'); state.selected.clear(); state.selectMode=false; render();
-  });
-};
-document.getElementById('selDelete').onclick = ()=>{
-  if (!state.selected.size) return;
-  const count = state.selected.size;
-  confirmAction('Move to Trash?', `${count} item${count===1?'':'s'} will be moved to Trash.`, async ()=>{
-    await opBulkTrash([...state.selected]); Sound.delete(); toast('Moved to Trash'); state.selected.clear(); state.selectMode=false; render();
-  });
-};
+            async sendMessage(text) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: this.channelId,
+                            text: text,
+                            parse_mode: 'HTML'
+                        })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Send error:', error);
+                    return null;
+                }
+            }
 
-/* ---- quick menu / top bar buttons ---- */
-document.getElementById('btnMenu').onclick = ()=>{
-  Sound.tap();
-  document.querySelector('#sheetMenu [data-act="select-mode"]').textContent = state.selectMode ? '✖️ Cancel selection' : '☑️ Select multiple';
-  openSheet('sheetMenu');
-};
-document.getElementById('btnBack').onclick = ()=>{ if(state.path==='/') return; Sound.tap(); state.path = parentPath(state.path); render(); };
-document.getElementById('btnSort').onclick = ()=>{
-  Sound.tap();
-  state.sortBy = state.sortBy==='name' ? 'size' : state.sortBy==='size' ? 'date' : 'name';
-  toast('Sorted by '+state.sortBy); render();
-};
-document.querySelectorAll('#sheetMenu [data-act]').forEach(b=> b.onclick = ()=> openMenuAction(b.dataset.act));
-function openMenuAction(act){
-  closeSheet('sheetMenu');
-  if (act==='new-folder') openNewFolder();
-  else if (act==='upload') document.getElementById('fileInputHidden').click();
-  else if (act==='new-file') openNewFile();
-  else if (act==='select-mode') toggleSelectMode();
-  else if (act==='refresh') bootIndex().then(()=>toast('Synced with cloud'));
-  else if (act==='about') toast('RiNi Cloud OS — your files, stored as an unlimited Telegram channel ☁️');
-}
+            async deleteMessage(messageId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/deleteMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: this.channelId,
+                            message_id: parseInt(messageId)
+                        })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    return null;
+                }
+            }
 
-/* ---- upload flow (file picker + drag & drop) ---- */
-async function handleDroppedFiles(fileList, targetPath){
-  const files = Array.from(fileList||[]);
-  if (!files.length) return;
-  for (const file of files){
-    if (file.size > CFG.MAX_FILE_MB*1024*1024){ toast(`${file.name} exceeds ${CFG.MAX_FILE_MB}MB limit`); continue; }
-    try { await opUploadFile(targetPath, file); Sound.upload(); } catch(err){ toast('Upload failed: '+file.name); Sound.error(); }
-  }
-  toast('Upload complete'); render();
-}
-document.getElementById('fileInputHidden').onchange = async (e)=>{
-  const files = Array.from(e.target.files||[]);
-  e.target.value = '';
-  if (!files.length) return;
-  for (const file of files){
-    if (file.size > CFG.MAX_FILE_MB*1024*1024){ toast(`Telegram's bot upload limit is ${CFG.MAX_FILE_MB}MB per file`); Sound.error(); continue; }
-    document.getElementById('uploadFileName').textContent = file.name;
-    document.getElementById('uploadProgressFill').style.width='10%';
-    openSheet('sheetUpload');
-    try {
-      document.getElementById('uploadProgressFill').style.width='55%';
-      await opUploadFile(state.path, file);
-      document.getElementById('uploadProgressFill').style.width='100%';
-      Sound.upload();
-    } catch(err){ toast('Upload failed: '+err.message); Sound.error(); }
-    closeSheet('sheetUpload');
-  }
-  toast('Upload complete — saved in '+state.path);
-  render();
-};
-const homeView = document.getElementById('view-home');
-homeView.addEventListener('dragover', (e)=>{ e.preventDefault(); document.getElementById('dragHint').classList.remove('hidden'); });
-homeView.addEventListener('dragleave', (e)=>{ if(e.target===homeView) document.getElementById('dragHint').classList.add('hidden'); });
-homeView.addEventListener('drop', async (e)=>{
-  e.preventDefault(); document.getElementById('dragHint').classList.add('hidden');
-  if (e.target.closest('[data-folder]')) return;
-  await handleDroppedFiles(e.dataTransfer.files, state.path);
-});
+            async getMessages() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/getUpdates`, {
+                        method: 'GET'
+                    });
+                    const data = await response.json();
+                    return data.result || [];
+                } catch (error) {
+                    console.error('Get messages error:', error);
+                    return [];
+                }
+            }
 
-/* ---------------------------------------------------------------------
-   Rich text rendering for chat (bold/italic/strikethrough/tables)
-   --------------------------------------------------------------------- */
-function renderMarkdownTables(text){
-  const lines = text.split('\n');
-  const out = []; let i=0;
-  const isRow = (l)=> /^\s*\|.*\|\s*$/.test(l);
-  const isSep = (l)=> /^\s*\|?[\s:|-]+\|[\s:|-]*\|?\s*$/.test(l) && /-/.test(l);
-  const cells = (l)=> l.split('|').map(c=>c.trim()).filter((c,idx,arr)=> !(idx===0&&c==='') && !(idx===arr.length-1&&c===''));
-  while (i<lines.length){
-    if (isRow(lines[i]) && i+1<lines.length && isSep(lines[i+1])){
-      const header = cells(lines[i]);
-      let j = i+2; const rows = [];
-      while (j<lines.length && isRow(lines[j])){ rows.push(cells(lines[j])); j++; }
-      let tbl = '<table class="chat-table"><thead><tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
-      rows.forEach(r=> tbl += '<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>');
-      tbl += '</tbody></table>';
-      out.push(tbl); i = j;
-    } else { out.push(lines[i]); i++; }
-  }
-  return out.join('\n');
-}
-function renderRichText(md){
-  const lines = escapeHtml(md).split('\n');
-  const processed = lines.map(line=>{
-    if (/^[-_=~]{3,}$/.test(line.trim())) return line; // literal separator lines
-    let s = line;
-    s = s.replace(/\*\*__(.+?)__\*\*/g, '<b><i>$1</i></b>');
-    s = s.replace(/__\*\*(.+?)\*\*__/g, '<b><i>$1</i></b>');
-    s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-    s = s.replace(/__(.+?)__/g, '<i>$1</i>');
-    s = s.replace(/_(.+?)_/g, '<i>$1</i>');
-    s = s.replace(/~~(.+?)~~/g, '<s>$1</s>');
-    return s;
-  });
-  let joined = renderMarkdownTables(processed.join('\n'));
-  return joined.replace(/\n/g, '<br>');
-}
-function fileDisplayHtml(filename, content){
-  return `<i>your file contains the text</i><br>${'-'.repeat(37)}<br><b>${escapeHtml(filename)}</b><br>${'-'.repeat(38)}<br><pre class="chat-pre">${escapeHtml(content)}</pre>${'_'.repeat(26)}`;
-}
+            async storeMemory(data) {
+                const encrypted = await this.encrypt(data);
+                const message = await this.sendMessage(
+                    `📝 MEMORY_${this.userId}_${Date.now()}\n${encrypted}`
+                );
+                return message?.result?.message_id;
+            }
 
-/* ---------------------------------------------------------------------
-   Web search (Wikipedia + DuckDuckGo), refined into readable answers
-   --------------------------------------------------------------------- */
-async function searchWikipediaSummary(query){
-  try {
-    const sres = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
-    const sdata = await sres.json();
-    const top = sdata?.query?.search?.[0];
-    if (!top) return null;
-    const sumRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(top.title)}`);
-    if (!sumRes.ok) return null;
-    const sum = await sumRes.json();
-    return sum.extract ? { title: sum.title, extract: sum.extract } : null;
-  } catch(e){ return null; }
-}
-async function searchDuckDuckGo(query){
-  try {
-    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
-    const data = await res.json();
-    return data.AbstractText || (data.RelatedTopics && data.RelatedTopics[0] && data.RelatedTopics[0].Text) || null;
-  } catch(e){ return null; } // DuckDuckGo's API doesn't always allow browser CORS — fails gracefully
-}
-async function performWebSearch(query){
-  const parts = [];
-  const w = await searchWikipediaSummary(query);
-  if (w) parts.push(`Wikipedia — ${w.title}: ${w.extract}`);
-  const d = await searchDuckDuckGo(query);
-  if (d) parts.push(`DuckDuckGo: ${d}`);
-  return parts.join('\n\n');
-}
+            async storeFile(file, content) {
+                const isText = this.isTextFile(file.name);
+                const storedContent = isText ? content : await this.fileToBase64(content);
+                
+                const message = await this.sendMessage(
+                    `📁 FILE_${this.userId}_${file.name}_${Date.now()}\n` +
+                    `TYPE:${file.name.split('.').pop()}\n` +
+                    `TEXT:${isText}\n` +
+                    `SIZE:${file.size}\n` +
+                    `\n${storedContent}`
+                );
+                return message?.result?.message_id;
+            }
 
-/* ---------------------------------------------------------------------
-   Puter.js — auth + AI
-   --------------------------------------------------------------------- */
-let puterUserCache = null;
-function puterSignedIn(){ try { return !!(window.puter && puter.auth && puter.auth.isSignedIn && puter.auth.isSignedIn()); } catch(e){ return false; } }
-async function callAi(prompt){
-  const res = await puter.ai.chat(prompt);
-  let text = (res && res.message && res.message.content) || (typeof res==='string'? res : JSON.stringify(res));
-  return text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-}
-async function aiAutoOrganize(){
-  const flat = state.index.files.filter(f=>!f.trashed).map(f=>({ id: f.id, name: f.name, path: f.path, mime: f.mime, size: f.size }));
-  if (!flat.length){ toast('Nothing to organize yet — upload some files first'); return; }
-  const prompt = `You are a tidy file-organizing assistant. Given this JSON array of files (id, name, path, mime, size),
-propose a cleaner folder structure grouped by file type/topic using short, friendly folder names starting with "/".
-Reply with ONLY a JSON array, no prose, no markdown fences, in this exact shape:
-[{"id":"<file id>","to":"/NewFolder/Sub"}, ...]
-Only include files whose folder should change. Files: ${JSON.stringify(flat)}`;
-  const text = await callAi(prompt);
-  const plan = JSON.parse(text);
-  plan.forEach(mv=>{
-    const f = state.index.files.find(x=>x.id===mv.id);
-    if (!f || !mv.to || f.trashed) return;
-    const to = normPath(mv.to);
-    if (to !== '/' && !state.index.folders.includes(to)) state.index.folders.push(to);
-    f.path = to;
-  });
-  await persistIndex();
-}
+            async getUserData() {
+                const messages = await this.getMessages();
+                const userData = messages.filter(msg => {
+                    const text = msg.message?.text || '';
+                    return text.includes(`_${this.userId}_`);
+                });
+                return userData;
+            }
 
-/* ---- AI chat sessions (ephemeral — never persisted) ---- */
-function newSession(){
-  const id = 's_'+Date.now()+Math.random().toString(36).slice(2,6);
-  state.aiSessions.push({ id, name:'New chat', messages:[] });
-  state.currentSessionId = id;
-  return id;
-}
-function currentSession(){ return state.aiSessions.find(s=>s.id===state.currentSessionId); }
-function pushChat(role, text, opts){
-  const s = currentSession(); if (!s) return;
-  opts = opts||{};
-  s.messages.push({ role, text, raw: !!opts.raw, html: !!opts.html });
-  if (s.messages.length>60) s.messages.shift();
-  if (role==='user' && s.name==='New chat') s.name = text.slice(0,28) + (text.length>28?'…':'');
-}
-function popLastAssistant(){ const s=currentSession(); if (s && s.messages.length && s.messages[s.messages.length-1].role==='assistant') s.messages.pop(); }
+            isTextFile(filename) {
+                const textExtensions = ['txt', 'json', 'csv', 'md', 'xml', 'html', 'css', 'js', 'py', 'java', 'cpp', 'c', 'rb', 'go', 'rs', 'swift', 'kt', 'php', 'sh'];
+                const ext = filename.split('.').pop().toLowerCase();
+                return textExtensions.includes(ext);
+            }
 
-function openAiChatOverlay(){
-  if (!state.aiSessions.length) newSession();
-  document.getElementById('aiChatOverlay').classList.add('show');
-  renderAiChatOverlay();
-  setTimeout(()=> document.getElementById('aiOverlayInput').focus(), 200);
-}
-function renderAiChatOverlay(){
-  const s = currentSession();
-  document.getElementById('aiChatSessionName').textContent = s ? s.name : 'New chat';
-  const body = document.getElementById('aiChatBody');
-  if (!s || !s.messages.length){
-    body.innerHTML = `<div class="chat-msg assistant">Hi! I'm your RiNi AI assistant ✨ I can create, rename, move, delete, restore, and organize your files, remember things long-term in <b>/ai-memories</b>, search the web, and read or analyze your text/code files when you ask. What would you like to do?</div>`;
-  } else {
-    body.innerHTML = s.messages.map(m=>{
-      const b = m.html ? m.text : (m.raw ? `<pre class="chat-pre">${escapeHtml(m.text)}</pre>` : renderRichText(m.text));
-      return `<div class="chat-msg ${m.role}">${b}</div>`;
-    }).join('');
-  }
-  body.scrollTop = body.scrollHeight;
-}
-function openSessionsSheet(){
-  const list = document.getElementById('sessionsList');
-  list.innerHTML = state.aiSessions.map(s=> `
-    <div class="session-row">
-      <button class="action-item" data-switch="${s.id}">${s.id===state.currentSessionId?'💬 ':'　'}${escapeHtml(s.name)}</button>
-      <button class="file-more" data-closesession="${s.id}">✕</button>
-    </div>`).join('') || `<p style="color:var(--ink-soft);">No chats yet.</p>`;
-  list.querySelectorAll('[data-switch]').forEach(b=> b.onclick=()=>{ state.currentSessionId=b.dataset.switch; closeSheet('sheetSessions'); renderAiChatOverlay(); });
-  list.querySelectorAll('[data-closesession]').forEach(b=> b.onclick=(e)=>{
-    e.stopPropagation();
-    const id = b.dataset.closesession;
-    state.aiSessions = state.aiSessions.filter(s=>s.id!==id);
-    if (state.currentSessionId===id){ state.currentSessionId = state.aiSessions.length ? state.aiSessions[0].id : newSession(); }
-    openSessionsSheet(); renderAiChatOverlay();
-  });
-  openSheet('sheetSessions');
-}
-document.getElementById('btnOpenAiChat').onclick = ()=>{ Sound.ping(); openAiChatOverlay(); };
-document.getElementById('btnCloseAiChat').onclick = ()=> document.getElementById('aiChatOverlay').classList.remove('show');
-document.getElementById('btnNewSession').onclick = ()=>{ Sound.tap(); newSession(); renderAiChatOverlay(); };
-document.getElementById('btnSessions').onclick = ()=>{ Sound.tap(); openSessionsSheet(); };
-document.getElementById('btnNewSessionFromList').onclick = ()=>{ newSession(); closeSheet('sheetSessions'); renderAiChatOverlay(); };
+            async encrypt(data) {
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                let encrypted = '';
+                for (let i = 0; i < str.length; i++) {
+                    encrypted += String.fromCharCode(str.charCodeAt(i) ^ this.userId.length);
+                }
+                return btoa(encrypted);
+            }
 
-async function runAiChatCommand(rawText){
-  const text = (rawText||'').trim();
-  if (!text) return;
-  const inputEl = document.getElementById('aiOverlayInput');
-  if (inputEl) inputEl.value = '';
-  pushChat('user', text); renderAiChatOverlay();
+            async decrypt(encrypted) {
+                try {
+                    const decoded = atob(encrypted);
+                    let decrypted = '';
+                    for (let i = 0; i < decoded.length; i++) {
+                        decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ this.userId.length);
+                    }
+                    return decrypted;
+                } catch {
+                    return encrypted;
+                }
+            }
 
-  if (!window.puter || !puter.ai){ pushChat('assistant', 'The AI service failed to load. Please retry in a moment.'); renderAiChatOverlay(); return; }
-  if (!puterSignedIn()){
-    try { await puter.auth.signIn(); puterUserCache = await puter.auth.getUser().catch(()=>null); }
-    catch(e){ pushChat('assistant', "You'll need to sign in with Puter first — tap the button above or in the Me tab."); renderAiChatOverlay(); return; }
-  }
-  pushChat('assistant', '…thinking…'); renderAiChatOverlay();
-
-  const flat = state.index.files.filter(f=>!f.trashed).map(f=>({ id: f.id, name: f.name, path: f.path, mime: f.mime, size: f.size }));
-  const trashedFlat = state.index.files.filter(f=>f.trashed).map(f=>({ id:f.id, name:f.name, wasAt: f.trashedFrom }));
-  const memoryFiles = state.index.files.filter(f=>!f.trashed && f.path===MEMORY_PATH).map(f=>({id:f.id, name:f.name}));
-  const folders = state.index.folders;
-  const prompt = `You are a file-management + general-purpose AI assistant for a personal cloud drive called RiNi Cloud.
-Current folders: ${JSON.stringify(folders)}
-Current files: ${JSON.stringify(flat)}
-Files currently in Trash (can be restored): ${JSON.stringify(trashedFlat)}
-Long-term memories already saved (in ${MEMORY_PATH} — use read_file with the id to recall full content): ${JSON.stringify(memoryFiles)}
-Current folder the user is viewing: "${state.path}"
-User instruction: "${text}"
-
-Decide what to do and reply with ONLY strict JSON, no prose, no markdown fences, in this exact shape:
-{"reply":"a friendly, well-formatted answer or confirmation for the user — you may use **bold**, __italic__, ~~strikethrough~~ and simple pipe tables","actions":[ ... ]}
-Each action is one of:
-{"type":"create_folder","path":"/X"}
-{"type":"create_file","path":"/X","name":"file.txt","content":"..."}
-{"type":"rename_file","id":"...","name":"newname.ext"}
-{"type":"move_file","id":"...","to":"/X"}
-{"type":"delete_file","id":"..."}
-{"type":"restore_file","id":"..."}
-{"type":"rename_folder","path":"/X","name":"newname"}
-{"type":"move_folder","path":"/X","to":"/Y"}
-{"type":"delete_folder","path":"/X"}
-{"type":"organize"}
-{"type":"empty_trash"}
-{"type":"save_memory","name":"topic.txt","content":"..."} — use this when the user asks you to remember something long-term, or you learn a durable fact worth keeping across future chats
-{"type":"web_search","query":"..."} — use when the user asks something you should look up on the web (facts, current info, general knowledge)
-{"type":"read_file","id":"..."} — use ONLY when the user explicitly asks to see/open/show/read the contents of a specific text or code file
-{"type":"analyze_file","id":"..."} — use ONLY when the user explicitly asks to analyse/review a specific text or code file
-"delete_file"/"delete_folder" move things to Trash (not permanent). If the instruction is just a question or small talk with no changes needed, return an empty actions array and put your full answer in "reply". Only reference file ids that exist in the lists above. If a path in "create_file" is omitted, use the current folder.`;
-
-  try {
-    const out = await callAi(prompt);
-    const plan = JSON.parse(out);
-    popLastAssistant();
-    let changed = false;
-    let handledReplyDirectly = false;
-
-    for (const a of (plan.actions||[])){
-      try {
-        if (a.type==='create_folder'){ await opCreateFolder(a.path); changed=true; }
-        else if (a.type==='create_file'){ await opCreateTextFile(normPath(a.path||state.path), a.name||'file.txt', a.content||''); changed=true; }
-        else if (a.type==='rename_file'){ await opRenameFile(a.id, a.name); changed=true; }
-        else if (a.type==='move_file'){ await opMoveFile(a.id, a.to); changed=true; }
-        else if (a.type==='delete_file'){ await opDeleteFile(a.id); changed=true; }
-        else if (a.type==='restore_file'){ await opRestoreFile(a.id); changed=true; }
-        else if (a.type==='rename_folder'){ await opRenameFolder(a.path, a.name); changed=true; }
-        else if (a.type==='move_folder'){ await opMoveFolderPath(a.path, joinPath(a.to, baseName(a.path))); changed=true; }
-        else if (a.type==='delete_folder'){ await opDeleteFolder(a.path); changed=true; }
-        else if (a.type==='organize'){ await aiAutoOrganize(); changed=true; }
-        else if (a.type==='empty_trash'){ await opEmptyTrash(); changed=true; }
-        else if (a.type==='save_memory'){ await opSaveMemory(a.name, a.content||''); changed=true; }
-        else if (a.type==='web_search'){
-          const results = await performWebSearch(a.query||text);
-          const refined = await callAi(`The user asked: "${text}"\nHere is raw information gathered from the web:\n${results || 'No results were found — say so honestly.'}\n\nWrite a clear, well-formatted, readable answer using **bold**, __italic__, ~~strikethrough~~ and simple pipe tables where genuinely helpful.`);
-          pushChat('assistant', refined);
-          handledReplyDirectly = true;
+            async fileToBase64(file) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = () => resolve('');
+                    reader.readAsDataURL(file);
+                });
+            }
         }
-        else if (a.type==='read_file'){
-          const f = state.index.files.find(x=>x.id===a.id);
-          const content = await readFileContentById(a.id);
-          if (content===null) pushChat('assistant', "That file doesn't look like text/code I can display — try Download instead.");
-          else pushChat('assistant', fileDisplayHtml(f.name, content), {html:true});
-          handledReplyDirectly = true;
+
+        const storage = new TelegramStorage();
+
+        // === UI HELPERS ===
+        function addMessage(type, content, metadata = {}) {
+            const area = document.getElementById('chatArea');
+            const messageId = ++state.messageCounter;
+            
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.dataset.messageId = messageId;
+            div.dataset.telegramId = metadata.telegramId || '';
+
+            // Format content
+            let formattedContent = content;
+            if (type === 'ai' || type === 'user') {
+                formattedContent = formatText(content);
+            }
+
+            div.innerHTML = `
+                <div class="message-content">${formattedContent}</div>
+                ${metadata.file ? `
+                    <div class="file-message" style="margin-top:8px">
+                        <span class="file-icon">${metadata.file.icon || '📄'}</span>
+                        <div class="file-info">
+                            <div class="file-name">${metadata.file.name}</div>
+                            <div class="file-meta">
+                                <span>${metadata.file.size || 'Unknown'}</span>
+                                <span>${metadata.file.type || 'File'}</span>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button onclick="downloadFile('${metadata.file.name}')">⬇️</button>
+                            <button class="delete" onclick="deleteFilePermanent('${metadata.file.name}')">🗑️</button>
+                        </div>
+                    </div>
+                ` : ''}
+                ${metadata.timestamp ? `<div class="timestamp">${metadata.timestamp}</div>` : ''}
+            `;
+
+            // Swipe handlers
+            let startX = 0, startY = 0;
+            let isSwiping = false;
+
+            div.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isSwiping = false;
+            });
+
+            div.addEventListener('touchmove', (e) => {
+                const deltaX = e.touches[0].clientX - startX;
+                const deltaY = e.touches[0].clientY - startY;
+                
+                if (Math.abs(deltaY) > 20) return;
+                if (Math.abs(deltaX) < 10) return;
+                
+                isSwiping = true;
+                e.preventDefault();
+
+                const progress = Math.min(Math.abs(deltaX) / 100, 1);
+                div.style.transform = `translateX(${deltaX}px)`;
+                div.style.opacity = 1 - progress * 0.5;
+                
+                if (deltaX < -30) {
+                    div.style.borderLeft = `3px solid #f85149`;
+                } else if (deltaX > 30) {
+                    div.style.borderRight = `3px solid #f0883e`;
+                } else {
+                    div.style.border = '1px solid #30363d';
+                }
+            });
+
+            div.addEventListener('touchend', (e) => {
+                const deltaX = e.changedTouches[0].clientX - startX;
+                
+                if (!isSwiping) {
+                    return;
+                }
+
+                if (deltaX < -60) {
+                    deleteMessageLocal(div);
+                } else if (deltaX > 60) {
+                    deleteMessagePermanent(div);
+                } else {
+                    div.style.transform = '';
+                    div.style.opacity = '';
+                    div.style.border = '';
+                }
+            });
+
+            // Mouse support
+            let mouseDown = false;
+            let mouseStartX = 0;
+
+            div.addEventListener('mousedown', (e) => {
+                if (e.button === 0) {
+                    mouseDown = true;
+                    mouseStartX = e.clientX;
+                }
+            });
+
+            div.addEventListener('mousemove', (e) => {
+                if (!mouseDown) return;
+                const deltaX = e.clientX - mouseStartX;
+                if (Math.abs(deltaX) > 10) {
+                    div.style.transform = `translateX(${deltaX}px)`;
+                    div.style.opacity = 1 - Math.min(Math.abs(deltaX) / 100, 0.5);
+                }
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!mouseDown) return;
+                mouseDown = false;
+                const deltaX = e.clientX - mouseStartX;
+                
+                if (deltaX < -60) {
+                    deleteMessageLocal(div);
+                } else if (deltaX > 60) {
+                    deleteMessagePermanent(div);
+                } else {
+                    div.style.transform = '';
+                    div.style.opacity = '';
+                }
+            });
+
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+            
+            state.messages.push({ id: messageId, type, content, metadata });
+            return div;
         }
-        else if (a.type==='analyze_file'){
-          const f = state.index.files.find(x=>x.id===a.id);
-          const content = await readFileContentById(a.id);
-          if (content===null){ pushChat('assistant', "That file doesn't look like text/code I can analyze."); }
-          else {
-            pushChat('assistant', fileDisplayHtml(f.name, content), {html:true});
+
+        function formatText(text) {
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            text = text.replace(/\|(.+)\|/g, (match) => {
+                const cells = match.split('|').filter(c => c.trim());
+                return `<table><tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr></table>`;
+            });
+            text = text.replace(/^- (.*?)$/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*?<\/li>)/gs, (match) => {
+                return `<ul>${match}</ul>`;
+            });
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            document.getElementById('chatArea').appendChild(div);
+        }
+
+        // === DELETE FUNCTIONS ===
+        function deleteMessageLocal(element) {
+            element.classList.add('swipe-left');
+            setTimeout(() => {
+                element.remove();
+                const id = parseInt(element.dataset.messageId);
+                state.messages = state.messages.filter(m => m.id !== id);
+            }, 350);
+        }
+
+        async function deleteMessagePermanent(element) {
+            const telegramId = element.dataset.telegramId;
+            if (telegramId) {
+                await storage.deleteMessage(telegramId);
+                addSystemMessage('🗑️ Message deleted from Telegram permanently');
+            }
+            element.classList.add('swipe-right');
+            setTimeout(() => {
+                element.remove();
+                const id = parseInt(element.dataset.messageId);
+                state.messages = state.messages.filter(m => m.id !== id);
+            }, 350);
+        }
+
+        async function deleteFilePermanent(filename) {
+            if (!confirm(`Delete "${filename}" permanently from Telegram?`)) return;
+            
+            const files = await storage.getUserData();
+            for (const msg of files) {
+                const text = msg.message?.text || '';
+                if (text.includes(filename) && text.includes('FILE_')) {
+                    await storage.deleteMessage(msg.message.message_id);
+                }
+            }
+            
+            addSystemMessage(`🗑️ Deleted "${filename}" from storage`);
+            refreshStorage();
+        }
+
+        // === FILE HANDLING ===
+        async function handleFiles(files) {
+            for (const file of files) {
+                const isText = storage.isTextFile(file.name);
+                let content = file;
+                
+                if (isText) {
+                    content = await file.text();
+                }
+
+                const messageId = await storage.storeFile(file, content);
+                
+                const fileMeta = {
+                    name: file.name,
+                    size: (file.size / 1024).toFixed(1) + ' KB',
+                    type: isText ? '📝 Text' : '📎 Binary',
+                    icon: isText ? '📄' : '📎'
+                };
+
+                addMessage('system', '📁 File uploaded:', {
+                    file: fileMeta,
+                    telegramId: messageId,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+
+                if (isText) {
+                    addSystemMessage(`📖 AI is reading "${file.name}"...`);
+                    await sendMessageToAI(`I've uploaded a file named "${file.name}". Here's its content:\n\n${content}\n\nPlease remember this.`);
+                }
+            }
+
+            refreshStorage();
+        }
+
+        // === DOWNLOAD FILE ===
+        async function downloadFile(filename) {
+            addSystemMessage(`⏳ Downloading "${filename}"...`);
+            
+            const files = await storage.getUserData();
+            for (const msg of files) {
+                const text = msg.message?.text || '';
+                if (text.includes(filename) && text.includes('FILE_')) {
+                    const lines = text.split('\n');
+                    const contentStart = lines.findIndex(l => l.trim() === '');
+                    if (contentStart !== -1) {
+                        const content = lines.slice(contentStart + 1).join('\n');
+                        const isText = text.includes('TEXT:true');
+                        
+                        if (isText) {
+                            const blob = new Blob([content], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = filename;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            addSystemMessage(`✅ Downloaded "${filename}"`);
+                        } else {
+                            try {
+                                const binary = atob(content);
+                                const byteArray = new Uint8Array(binary.length);
+                                for (let i = 0; i < binary.length; i++) {
+                                    byteArray[i] = binary.charCodeAt(i);
+                                }
+                                const blob = new Blob([byteArray]);
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                addSystemMessage(`✅ Downloaded "${filename}"`);
+                            } catch (e) {
+                                addSystemMessage(`❌ Could not download "${filename}"`);
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+            addSystemMessage(`❌ File "${filename}" not found`);
+        }
+
+        // === AI COMMUNICATION ===
+        async function sendMessageToAI(message) {
+            if (state.isProcessing) return;
+            state.isProcessing = true;
+
+            document.getElementById('typingIndicator').style.display = 'flex';
+            document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+
             try {
-              const analysis = await callAi(`Analyze the following file named "${f.name}":\n\n${content}\n\nGive a concise, helpful analysis (what it contains/does, notable structure or issues). Use **bold**, __italic__, ~~strikethrough~~ and simple pipe tables where genuinely helpful.`);
-              pushChat('assistant', analysis);
-            } catch(e){ pushChat('assistant', "I displayed the file but couldn't complete the analysis — try again."); }
-          }
-          handledReplyDirectly = true;
+                const response = await puter.ai.chat(message, {
+                    model: 'gpt-4o-mini'
+                });
+
+                await storage.storeMemory({
+                    user: state.userId,
+                    message: message,
+                    response: response,
+                    timestamp: new Date().toISOString()
+                });
+
+                addMessage('ai', response, {
+                    timestamp: new Date().toLocaleTimeString()
+                });
+
+            } catch (error) {
+                addMessage('system', `❌ Error: ${error.message}`);
+            } finally {
+                state.isProcessing = false;
+                document.getElementById('typingIndicator').style.display = 'none';
+                document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+            }
         }
-      } catch(actErr){ /* skip this single action, keep going */ }
-    }
-    if (!handledReplyDirectly) pushChat('assistant', plan.reply || 'Done!');
-    if (changed) Sound.success();
-  } catch(e){
-    popLastAssistant();
-    pushChat('assistant', "Sorry, I couldn't complete that — try rephrasing.");
-    Sound.error();
-  }
-  renderAiChatOverlay();
-  render();
-}
-document.getElementById('aiOverlaySend').onclick = ()=> runAiChatCommand(document.getElementById('aiOverlayInput').value);
-document.getElementById('aiOverlayInput').onkeydown = (e)=>{ if (e.key==='Enter'){ e.preventDefault(); runAiChatCommand(e.target.value); } };
 
-/* ---------------------------------------------------------------------
-   Search + tabs
-   --------------------------------------------------------------------- */
-document.getElementById('searchInput').oninput = (e)=>{ state.search = e.target.value; render(); };
-document.querySelectorAll('.nav-btn').forEach(b=> b.onclick = ()=>{ Sound.tap(); if(state.selectMode) toggleSelectMode(); state.tab = b.dataset.tab; render(); });
+        // === SEND MESSAGE ===
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            addMessage('user', text, {
+                timestamp: new Date().toLocaleTimeString()
+            });
+            
+            input.value = '';
+            input.style.height = 'auto';
+            
+            const fileMatch = text.match(/give me (?:the file |)(.+?)(?:\.|$)/i);
+            if (fileMatch && text.toLowerCase().includes('file')) {
+                await downloadFile(fileMatch[1].trim());
+                return;
+            }
+            
+            if (text.toLowerCase().includes('list files') || text.toLowerCase().includes('show files')) {
+                await refreshStorage();
+                return;
+            }
+            
+            await sendMessageToAI(text);
+        }
 
-/* ---------------------------------------------------------------------
-   Boot
-   --------------------------------------------------------------------- */
-document.getElementById('appTitle').textContent = CFG.APP_NAME || 'RiNi Cloud';
-if ('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
-if (window.puter && puter.auth && puter.auth.getUser){ puter.auth.getUser().then(u=> puterUserCache=u).catch(()=>{}); }
-newSession();
-bootIndex();
-</script>
+        // === INPUT HANDLING ===
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        document.getElementById('userInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // === REFRESH STORAGE ===
+        async function refreshStorage() {
+            addSystemMessage('🔄 Refreshing storage...');
+            
+            try {
+                const data = await storage.getUserData();
+                const fileCount = data.filter(msg => 
+                    msg.message?.text?.includes('FILE_')
+                ).length;
+                
+                document.getElementById('storageCount').textContent = `${fileCount} files`;
+                addSystemMessage(`📊 Storage: ${fileCount} files in Telegram`);
+                
+                if (fileCount > 0) {
+                    const fileNames = data
+                        .filter(msg => msg.message?.text?.includes('FILE_'))
+                        .map(msg => {
+                            const match = msg.message.text.match(/FILE_.+?_(.+?)_/);
+                            return match ? match[1] : null;
+                        })
+                        .filter(Boolean);
+                    
+                    if (fileNames.length > 0) {
+                        const uniqueFiles = [...new Set(fileNames)];
+                        addSystemMessage(`📁 Files: ${uniqueFiles.join(', ')}`);
+                    }
+                }
+            } catch (error) {
+                addSystemMessage(`❌ Error refreshing: ${error.message}`);
+            }
+        }
+
+        // === CLEAR CHAT ===
+        function clearChat() {
+            if (!confirm('Clear chat messages (not storage)?')) return;
+            document.getElementById('chatArea').innerHTML = '';
+            state.messages = [];
+            addSystemMessage('🧹 Chat cleared');
+        }
+
+        // === THEME TOGGLE ===
+        function toggleTheme() {
+            const isDark = document.body.style.background !== '#f0f6fc';
+            document.body.style.background = isDark ? '#f0f6fc' : '#0d1117';
+            document.body.style.color = isDark ? '#24292f' : '#e6edf3';
+            document.querySelector('.app').style.background = isDark ? '#f6f8fa' : '#0d1117';
+            document.querySelector('.header').style.background = isDark ? 'rgba(246,248,250,0.95)' : 'rgba(22,27,34,0.95)';
+            document.querySelector('.input-area').style.background = isDark ? 'rgba(246,248,250,0.95)' : 'rgba(22,27,34,0.95)';
+        }
+
+        // === DRAG AND DROP ===
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            document.getElementById('fileDropZone').classList.add('active');
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            document.getElementById('fileDropZone').classList.remove('active');
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('fileDropZone').classList.remove('active');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        document.getElementById('fileDropZone').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+            document.getElementById('fileDropZone').classList.remove('active');
+        });
+
+        // === PWA INSTALLATION ===
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.classList.add('show');
+                installBtn.addEventListener('click', async () => {
+                    installBtn.classList.remove('show');
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBtn')?.classList.remove('show');
+            console.log('PWA installed successfully');
+        });
+
+        // === INIT ===
+        addSystemMessage(`👋 Welcome! I'm your AI Memory Bot.`);
+        addSystemMessage(`💾 Your data is stored in Telegram's unlimited cloud storage.`);
+        addSystemMessage(`📤 Swipe left to delete from chat, right to delete permanently from Telegram.`);
+        addSystemMessage(`📁 Upload any file and I'll remember it.`);
+        
+        setTimeout(refreshStorage, 1000);
+
+        console.log('🧠 AI Memory Bot initialized');
+        console.log(`👤 User ID: ${state.userId}`);
+    </script>
+    
+    <!-- Install Button -->
+    <button id="installBtn">📲 Install App</button>
 </body>
 </html>
