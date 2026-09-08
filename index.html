@@ -129,6 +129,7 @@
             gap: 8px;
             font-size: 11px;
             color: #8b949e;
+            flex-wrap: wrap;
         }
 
         .status-dot {
@@ -138,6 +139,10 @@
             background: #2ea043;
             display: inline-block;
             animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #f85149;
         }
 
         @keyframes pulse {
@@ -170,6 +175,20 @@
 
         .header-right button:active {
             transform: scale(0.92);
+        }
+
+        #loginBtn {
+            background: #1f6feb !important;
+            color: white !important;
+            padding: 4px 12px !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            display: none;
+        }
+
+        #loginBtn:hover {
+            background: #388bfd !important;
         }
 
         /* ============================================
@@ -695,6 +714,9 @@
             .header h1 {
                 font-size: 14px;
             }
+            .header-status {
+                font-size: 10px;
+            }
             .chat-area {
                 padding: 12px 14px 4px;
             }
@@ -710,6 +732,10 @@
             }
             .file-display .file-name {
                 font-size: 13px;
+            }
+            #loginBtn {
+                font-size: 10px !important;
+                padding: 2px 8px !important;
             }
         }
 
@@ -744,8 +770,8 @@
                 <div class="header-info">
                     <h1>AI Memory Bot</h1>
                     <div class="header-status">
-                        <span class="status-dot"></span>
-                        <span id="statusText">Ready</span>
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">Loading...</span>
                         <span style="color: #484f58; margin-left: 4px;">•</span>
                         <span id="fileCount" style="color: #484f58; font-size: 10px;">0 files</span>
                         <span style="color: #484f58; margin-left: 4px;">•</span>
@@ -757,6 +783,7 @@
                 <button onclick="refreshData()" title="Refresh" id="refreshBtn">🔄</button>
                 <button onclick="clearChat()" title="Clear chat">🗑️</button>
                 <button onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                <button id="loginBtn" onclick="loginToPuter()">🔐 Login</button>
             </div>
         </div>
 
@@ -802,637 +829,618 @@
     <!-- ============================================
     JAVASCRIPT - COMPLETE APPLICATION
     ============================================ -->
-   <script>
-    // ============================================
-    //  WAIT FOR PUTER.JS TO LOAD
-    // ============================================
-    let puterReady = false;
-    let puterInitAttempts = 0;
-    const MAX_ATTEMPTS = 10;
+    <script>
+        // ============================================
+        //  WAIT FOR PUTER.JS TO LOAD
+        // ============================================
+        let puterReady = false;
+        let puterInitAttempts = 0;
+        const MAX_ATTEMPTS = 15;
 
-    function waitForPuter() {
-        return new Promise((resolve, reject) => {
-            function checkPuter() {
-                if (typeof puter !== 'undefined' && puter.ai) {
-                    console.log('✅ Puter.js loaded successfully');
-                    resolve();
-                    return;
+        function waitForPuter() {
+            return new Promise((resolve, reject) => {
+                function checkPuter() {
+                    if (typeof puter !== 'undefined' && puter.ai) {
+                        console.log('✅ Puter.js loaded successfully');
+                        puterReady = true;
+                        resolve();
+                        return;
+                    }
+                    
+                    puterInitAttempts++;
+                    if (puterInitAttempts > MAX_ATTEMPTS) {
+                        reject(new Error('Puter.js failed to load after ' + MAX_ATTEMPTS + ' attempts'));
+                        return;
+                    }
+                    
+                    console.log(`⏳ Waiting for Puter.js... (attempt ${puterInitAttempts})`);
+                    setTimeout(checkPuter, 500);
                 }
                 
-                puterInitAttempts++;
-                if (puterInitAttempts > MAX_ATTEMPTS) {
-                    reject(new Error('Puter.js failed to load after ' + MAX_ATTEMPTS + ' attempts'));
-                    return;
-                }
-                
-                console.log(`⏳ Waiting for Puter.js... (attempt ${puterInitAttempts})`);
-                setTimeout(checkPuter, 500);
-            }
-            
-            checkPuter();
-        });
-    }
-
-    // ============================================
-    //  CONFIGURATION
-    // ============================================
-    const CONFIG = {
-        telegram: {
-            channelId: '-1003953146702',
-            botToken: '8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E',
-            baseUrl: 'https://api.telegram.org/bot8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E'
-        },
-        textExtensions: ['txt', 'json', 'csv', 'md', 'xml', 'html', 'htm', 'css', 'js', 
-                        'py', 'java', 'cpp', 'c', 'rb', 'go', 'rs', 'swift', 'kt', 
-                        'php', 'sh', 'bash', 'zsh', 'fish', 'ps1', 'bat', 'cmd',
-                        'yml', 'yaml', 'toml', 'ini', 'cfg', 'conf', 'log']
-    };
-
-    // ============================================
-    //  STATE
-    // ============================================
-    const state = {
-        userId: localStorage.getItem('memory_bot_user_id') || null,
-        sessionId: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-        messages: [],
-        files: [],
-        isProcessing: false,
-        messageCounter: 0,
-        isLoggedIn: false,
-        firstMessage: true,
-        puterLoaded: false
-    };
-
-    // ============================================
-    //  USER MANAGEMENT
-    // ============================================
-    function generateUserId() {
-        const array = new Uint8Array(16);
-        crypto.getRandomValues(array);
-        return 'user_' + Array.from(array, byte => 
-            byte.toString(16).padStart(2, '0')
-        ).join('');
-    }
-
-    function getUserId() {
-        if (!state.userId) {
-            state.userId = generateUserId();
-            localStorage.setItem('memory_bot_user_id', state.userId);
-        }
-        return state.userId;
-    }
-
-    // ============================================
-    //  TELEGRAM STORAGE CLASS
-    // ============================================
-    class TelegramStorage {
-        constructor() {
-            this.channelId = CONFIG.telegram.channelId;
-            this.baseUrl = CONFIG.telegram.baseUrl;
-            this.userId = getUserId();
-        }
-
-        async sendMessage(text) {
-            try {
-                const response = await fetch(`${this.baseUrl}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: this.channelId,
-                        text: text,
-                        parse_mode: 'HTML'
-                    })
-                });
-                const data = await response.json();
-                if (!data.ok) throw new Error(data.description || 'Failed to send');
-                return data;
-            } catch (error) {
-                console.error('Send error:', error);
-                throw error;
-            }
-        }
-
-        async deleteMessage(messageId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/deleteMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: this.channelId,
-                        message_id: parseInt(messageId)
-                    })
-                });
-                return await response.json();
-            } catch (error) {
-                console.error('Delete error:', error);
-                return null;
-            }
-        }
-
-        async getUpdates() {
-            try {
-                const response = await fetch(`${this.baseUrl}/getUpdates`, {
-                    method: 'GET'
-                });
-                const data = await response.json();
-                return data.result || [];
-            } catch (error) {
-                console.error('Get updates error:', error);
-                return [];
-            }
-        }
-
-        async storeMemory(message, response) {
-            try {
-                const data = {
-                    user: this.userId,
-                    message: message,
-                    response: response,
-                    timestamp: new Date().toISOString()
-                };
-                const encrypted = await this.encrypt(JSON.stringify(data));
-                const result = await this.sendMessage(
-                    `🧠 MEMORY_${this.userId}_${Date.now()}\n${encrypted}`
-                );
-                return result?.result?.message_id;
-            } catch (error) {
-                console.error('Store memory error:', error);
-                return null;
-            }
-        }
-
-        async storeFile(file, content) {
-            try {
-                const isText = this.isTextFile(file.name);
-                const storedContent = isText ? content : await this.fileToBase64(content);
-                const fileType = file.name.split('.').pop().toLowerCase();
-                
-                const result = await this.sendMessage(
-                    `📁 FILE_${this.userId}_${file.name}_${Date.now()}\n` +
-                    `TYPE:${fileType}\n` +
-                    `TEXT:${isText}\n` +
-                    `SIZE:${file.size}\n` +
-                    `\n${storedContent}`
-                );
-                return result?.result?.message_id;
-            } catch (error) {
-                console.error('Store file error:', error);
-                return null;
-            }
-        }
-
-        async getAllUserMessages() {
-            try {
-                const updates = await this.getUpdates();
-                const userMessages = updates.filter(msg => {
-                    const text = msg.message?.text || '';
-                    return text.includes(`_${this.userId}_`);
-                });
-                return userMessages;
-            } catch (error) {
-                console.error('Get user messages error:', error);
-                return [];
-            }
-        }
-
-        async getMemories() {
-            const messages = await this.getAllUserMessages();
-            return messages.filter(msg => 
-                msg.message?.text?.includes('🧠 MEMORY_')
-            );
-        }
-
-        async getFiles() {
-            const messages = await this.getAllUserMessages();
-            return messages.filter(msg => 
-                msg.message?.text?.includes('📁 FILE_')
-            );
-        }
-
-        isTextFile(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            return CONFIG.textExtensions.includes(ext);
-        }
-
-        async encrypt(data) {
-            let encrypted = '';
-            for (let i = 0; i < data.length; i++) {
-                encrypted += String.fromCharCode(data.charCodeAt(i) ^ this.userId.length);
-            }
-            return btoa(encrypted);
-        }
-
-        async decrypt(encrypted) {
-            try {
-                const decoded = atob(encrypted);
-                let decrypted = '';
-                for (let i = 0; i < decoded.length; i++) {
-                    decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ this.userId.length);
-                }
-                return decrypted;
-            } catch {
-                return encrypted;
-            }
-        }
-
-        async fileToBase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = () => resolve('');
-                reader.readAsDataURL(file);
+                checkPuter();
             });
         }
 
-        async extractFileContent(messageText) {
-            const lines = messageText.split('\n');
-            const contentStart = lines.findIndex(l => l.trim() === '');
-            if (contentStart !== -1) {
-                return lines.slice(contentStart + 1).join('\n');
-            }
-            return '';
+        // ============================================
+        //  CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            telegram: {
+                channelId: '-1003953146702',
+                botToken: '8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E',
+                baseUrl: 'https://api.telegram.org/bot8835604359:AAFDVBTEXWb7lwQsSMynshd3HNoOM8dG-3E'
+            },
+            textExtensions: ['txt', 'json', 'csv', 'md', 'xml', 'html', 'htm', 'css', 'js', 
+                            'py', 'java', 'cpp', 'c', 'rb', 'go', 'rs', 'swift', 'kt', 
+                            'php', 'sh', 'bash', 'zsh', 'fish', 'ps1', 'bat', 'cmd',
+                            'yml', 'yaml', 'toml', 'ini', 'cfg', 'conf', 'log']
+        };
+
+        // ============================================
+        //  STATE
+        // ============================================
+        const state = {
+            userId: localStorage.getItem('memory_bot_user_id') || null,
+            sessionId: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            messages: [],
+            files: [],
+            isProcessing: false,
+            messageCounter: 0,
+            isLoggedIn: false,
+            puterLoaded: false,
+            loginAttempted: false
+        };
+
+        // ============================================
+        //  USER MANAGEMENT
+        // ============================================
+        function generateUserId() {
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            return 'user_' + Array.from(array, byte => 
+                byte.toString(16).padStart(2, '0')
+            ).join('');
         }
 
-        parseFileMessage(messageText) {
-            const lines = messageText.split('\n');
-            const result = {
-                type: 'file',
-                filename: '',
-                fileType: '',
-                isText: false,
-                size: 0,
-                content: '',
-                messageId: null
-            };
+        function getUserId() {
+            if (!state.userId) {
+                state.userId = generateUserId();
+                localStorage.setItem('memory_bot_user_id', state.userId);
+            }
+            return state.userId;
+        }
 
-            const fileMatch = messageText.match(/FILE_.+?_(.+?)_/);
-            if (fileMatch) {
-                result.filename = fileMatch[1];
+        // ============================================
+        //  TELEGRAM STORAGE CLASS
+        // ============================================
+        class TelegramStorage {
+            constructor() {
+                this.channelId = CONFIG.telegram.channelId;
+                this.baseUrl = CONFIG.telegram.baseUrl;
+                this.userId = getUserId();
             }
 
-            for (const line of lines) {
-                if (line.startsWith('TYPE:')) {
-                    result.fileType = line.replace('TYPE:', '').trim();
+            async sendMessage(text) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: this.channelId,
+                            text: text,
+                            parse_mode: 'HTML'
+                        })
+                    });
+                    const data = await response.json();
+                    if (!data.ok) throw new Error(data.description || 'Failed to send');
+                    return data;
+                } catch (error) {
+                    console.error('Send error:', error);
+                    throw error;
                 }
-                if (line.startsWith('TEXT:')) {
-                    result.isText = line.replace('TEXT:', '').trim() === 'true';
+            }
+
+            async deleteMessage(messageId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/deleteMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: this.channelId,
+                            message_id: parseInt(messageId)
+                        })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    return null;
                 }
-                if (line.startsWith('SIZE:')) {
-                    result.size = parseInt(line.replace('SIZE:', '').trim()) || 0;
+            }
+
+            async getUpdates() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/getUpdates`, {
+                        method: 'GET'
+                    });
+                    const data = await response.json();
+                    return data.result || [];
+                } catch (error) {
+                    console.error('Get updates error:', error);
+                    return [];
                 }
             }
 
-            const contentStart = lines.findIndex(l => l.trim() === '');
-            if (contentStart !== -1) {
-                result.content = lines.slice(contentStart + 1).join('\n');
-            }
-
-            return result;
-        }
-    }
-
-    // ============================================
-    //  INIT STORAGE
-    // ============================================
-    const storage = new TelegramStorage();
-
-    // ============================================
-    //  UI HELPERS
-    // ============================================
-    function addMessage(type, content, metadata = {}) {
-        const area = document.getElementById('chatArea');
-        const messageId = ++state.messageCounter;
-        
-        const div = document.createElement('div');
-        div.className = `message ${type}`;
-        div.dataset.messageId = messageId;
-        div.dataset.telegramId = metadata.telegramId || '';
-
-        let formattedContent = content;
-        if (type === 'ai' || type === 'user') {
-            formattedContent = formatText(content);
-        }
-
-        let html = `<div class="message-content">${formattedContent}</div>`;
-
-        if (metadata.files && metadata.files.length > 0) {
-            for (const file of metadata.files) {
-                html += renderFileDisplay(file);
-            }
-        }
-
-        if (metadata.timestamp) {
-            html += `<div class="timestamp">${metadata.timestamp}</div>`;
-        }
-
-        div.innerHTML = html;
-        
-        setupSwipeHandlers(div);
-        
-        area.appendChild(div);
-        area.scrollTop = area.scrollHeight;
-        
-        state.messages.push({ id: messageId, type, content, metadata });
-        return div;
-    }
-
-    function renderFileDisplay(file) {
-        const isText = file.isText !== undefined ? file.isText : storage.isTextFile(file.filename);
-        const icon = isText ? '📄' : '📎';
-        const typeLabel = isText ? 'Text file' : 'Binary file';
-        const badgeClass = isText ? 'text' : 'binary';
-        const badgeText = isText ? '📝 AI can read' : '🔒 AI cannot read';
-        
-        let previewHtml = '';
-        if (isText && file.content && file.content.length > 0) {
-            const preview = file.content.substring(0, 300) + (file.content.length > 300 ? '...' : '');
-            previewHtml = `<div class="file-content-preview">${escapeHtml(preview)}</div>`;
-        }
-
-        return `
-            <div class="file-display" data-filename="${file.filename}">
-                <div class="file-header">
-                    <span class="file-icon">${icon}</span>
-                    <div class="file-info">
-                        <div class="file-name">${escapeHtml(file.filename)}</div>
-                        <div class="file-meta">
-                            <span>${typeLabel}</span>
-                            <span>• ${formatFileSize(file.size || 0)}</span>
-                            <span class="file-badge ${badgeClass}">${badgeText}</span>
-                        </div>
-                    </div>
-                </div>
-                ${previewHtml}
-                <div class="file-actions">
-                    <button class="download" onclick="downloadFile('${escapeHtml(file.filename)}')">
-                        ⬇️ Download
-                    </button>
-                    <button class="delete" onclick="deleteFilePermanent('${escapeHtml(file.filename)}')">
-                        🗑️ Delete
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    function formatText(text) {
-        let html = text;
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
-        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-        html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-        html = html.replace(/\|(.+)\|/g, (match) => {
-            const cells = match.split('|').filter(c => c.trim());
-            return `<table><tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr></table>`;
-        });
-        html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*?<\/li>)/gs, (match) => {
-            return `<ul>${match}</ul>`;
-        });
-        html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
-        html = html.replace(/\n/g, '<br>');
-        return html;
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-    }
-
-    function addSystemMessage(text) {
-        const div = document.createElement('div');
-        div.className = 'message system';
-        div.textContent = text;
-        document.getElementById('chatArea').appendChild(div);
-        document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
-    }
-
-    function showTyping(show) {
-        const indicator = document.getElementById('typingIndicator');
-        if (show) {
-            indicator.classList.add('show');
-            document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
-        } else {
-            indicator.classList.remove('show');
-        }
-    }
-
-    function updateStatus(text) {
-        document.getElementById('statusText').textContent = text;
-    }
-
-    // ============================================
-    //  SWIPE HANDLERS
-    // ============================================
-    function setupSwipeHandlers(element) {
-        let startX = 0, startY = 0;
-        let isSwiping = false;
-
-        element.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isSwiping = false;
-            element.style.transition = 'none';
-        }, { passive: true });
-
-        element.addEventListener('touchmove', (e) => {
-            const deltaX = e.touches[0].clientX - startX;
-            const deltaY = e.touches[0].clientY - startY;
-            
-            if (Math.abs(deltaY) > 20) return;
-            if (Math.abs(deltaX) < 10) return;
-            
-            isSwiping = true;
-            e.preventDefault();
-
-            const progress = Math.min(Math.abs(deltaX) / 100, 1);
-            element.style.transform = `translateX(${deltaX}px)`;
-            element.style.opacity = 1 - progress * 0.4;
-            
-            if (deltaX < -30) {
-                element.style.borderLeft = `3px solid #f85149`;
-            } else if (deltaX > 30) {
-                element.style.borderRight = `3px solid #f0883e`;
-            } else {
-                element.style.border = '';
-            }
-        }, { passive: false });
-
-        element.addEventListener('touchend', (e) => {
-            const deltaX = e.changedTouches[0].clientX - startX;
-            element.style.transition = 'all 0.25s ease';
-            
-            if (!isSwiping) return;
-
-            if (deltaX < -60) {
-                deleteMessageLocal(element);
-            } else if (deltaX > 60) {
-                deleteMessagePermanent(element);
-            } else {
-                element.style.transform = '';
-                element.style.opacity = '';
-                element.style.border = '';
-            }
-        }, { passive: true });
-
-        let mouseDown = false;
-        let mouseStartX = 0;
-
-        element.addEventListener('mousedown', (e) => {
-            if (e.button === 0) {
-                mouseDown = true;
-                mouseStartX = e.clientX;
-                element.style.transition = 'none';
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!mouseDown) return;
-            const deltaX = e.clientX - mouseStartX;
-            if (Math.abs(deltaX) > 10) {
-                element.style.transform = `translateX(${deltaX}px)`;
-                element.style.opacity = 1 - Math.min(Math.abs(deltaX) / 100, 0.4);
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            if (!mouseDown) return;
-            mouseDown = false;
-            element.style.transition = 'all 0.25s ease';
-            const deltaX = e.clientX - mouseStartX;
-            
-            if (deltaX < -60) {
-                deleteMessageLocal(element);
-            } else if (deltaX > 60) {
-                deleteMessagePermanent(element);
-            } else {
-                element.style.transform = '';
-                element.style.opacity = '';
-            }
-        });
-    }
-
-    // ============================================
-    //  DELETE FUNCTIONS
-    // ============================================
-    function deleteMessageLocal(element) {
-        element.classList.add('swipe-left');
-        setTimeout(() => {
-            element.remove();
-            const id = parseInt(element.dataset.messageId);
-            state.messages = state.messages.filter(m => m.id !== id);
-        }, 350);
-    }
-
-    async function deleteMessagePermanent(element) {
-        const telegramId = element.dataset.telegramId;
-        if (telegramId) {
-            await storage.deleteMessage(telegramId);
-            addSystemMessage('🗑️ Message deleted from Telegram permanently');
-        }
-        element.classList.add('swipe-right');
-        setTimeout(() => {
-            element.remove();
-            const id = parseInt(element.dataset.messageId);
-            state.messages = state.messages.filter(m => m.id !== id);
-        }, 350);
-        await refreshData();
-    }
-
-    // ============================================
-    //  FILE FUNCTIONS
-    // ============================================
-    async function handleFiles(files) {
-        const fileArray = Array.from(files);
-        if (fileArray.length === 0) return;
-
-        updateStatus(`Uploading ${fileArray.length} file(s)...`);
-        showTyping(true);
-
-        try {
-            for (const file of fileArray) {
-                const isText = storage.isTextFile(file.name);
-                let content = file;
-
-                if (isText) {
-                    content = await file.text();
+            async storeMemory(message, response) {
+                try {
+                    const data = {
+                        user: this.userId,
+                        message: message,
+                        response: response,
+                        timestamp: new Date().toISOString()
+                    };
+                    const encrypted = await this.encrypt(JSON.stringify(data));
+                    const result = await this.sendMessage(
+                        `🧠 MEMORY_${this.userId}_${Date.now()}\n${encrypted}`
+                    );
+                    return result?.result?.message_id;
+                } catch (error) {
+                    console.error('Store memory error:', error);
+                    return null;
                 }
+            }
 
-                const messageId = await storage.storeFile(file, content);
-                
-                const fileData = {
-                    filename: file.name,
-                    size: file.size,
-                    isText: isText,
-                    content: isText ? content : null,
-                    messageId: messageId
+            async storeFile(file, content) {
+                try {
+                    const isText = this.isTextFile(file.name);
+                    const storedContent = isText ? content : await this.fileToBase64(content);
+                    const fileType = file.name.split('.').pop().toLowerCase();
+                    
+                    const result = await this.sendMessage(
+                        `📁 FILE_${this.userId}_${file.name}_${Date.now()}\n` +
+                        `TYPE:${fileType}\n` +
+                        `TEXT:${isText}\n` +
+                        `SIZE:${file.size}\n` +
+                        `\n${storedContent}`
+                    );
+                    return result?.result?.message_id;
+                } catch (error) {
+                    console.error('Store file error:', error);
+                    return null;
+                }
+            }
+
+            async getAllUserMessages() {
+                try {
+                    const updates = await this.getUpdates();
+                    const userMessages = updates.filter(msg => {
+                        const text = msg.message?.text || '';
+                        return text.includes(`_${this.userId}_`);
+                    });
+                    return userMessages;
+                } catch (error) {
+                    console.error('Get user messages error:', error);
+                    return [];
+                }
+            }
+
+            async getMemories() {
+                const messages = await this.getAllUserMessages();
+                return messages.filter(msg => 
+                    msg.message?.text?.includes('🧠 MEMORY_')
+                );
+            }
+
+            async getFiles() {
+                const messages = await this.getAllUserMessages();
+                return messages.filter(msg => 
+                    msg.message?.text?.includes('📁 FILE_')
+                );
+            }
+
+            isTextFile(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                return CONFIG.textExtensions.includes(ext);
+            }
+
+            async encrypt(data) {
+                let encrypted = '';
+                for (let i = 0; i < data.length; i++) {
+                    encrypted += String.fromCharCode(data.charCodeAt(i) ^ this.userId.length);
+                }
+                return btoa(encrypted);
+            }
+
+            async decrypt(encrypted) {
+                try {
+                    const decoded = atob(encrypted);
+                    let decrypted = '';
+                    for (let i = 0; i < decoded.length; i++) {
+                        decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ this.userId.length);
+                    }
+                    return decrypted;
+                } catch {
+                    return encrypted;
+                }
+            }
+
+            async fileToBase64(file) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = () => resolve('');
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            parseFileMessage(messageText) {
+                const lines = messageText.split('\n');
+                const result = {
+                    type: 'file',
+                    filename: '',
+                    fileType: '',
+                    isText: false,
+                    size: 0,
+                    content: '',
+                    messageId: null
                 };
 
-                addMessage('system', `📁 Uploaded file:`, {
-                    files: [fileData],
-                    telegramId: messageId,
-                    timestamp: new Date().toLocaleTimeString()
-                });
+                const fileMatch = messageText.match(/FILE_.+?_(.+?)_/);
+                if (fileMatch) {
+                    result.filename = fileMatch[1];
+                }
 
-                if (isText && content.length > 0) {
-                    await sendMessageToAI(`I uploaded a text file named "${file.name}". Here's its content:\n\n${content}\n\nPlease remember this file and its content.`);
+                for (const line of lines) {
+                    if (line.startsWith('TYPE:')) {
+                        result.fileType = line.replace('TYPE:', '').trim();
+                    }
+                    if (line.startsWith('TEXT:')) {
+                        result.isText = line.replace('TEXT:', '').trim() === 'true';
+                    }
+                    if (line.startsWith('SIZE:')) {
+                        result.size = parseInt(line.replace('SIZE:', '').trim()) || 0;
+                    }
+                }
+
+                const contentStart = lines.findIndex(l => l.trim() === '');
+                if (contentStart !== -1) {
+                    result.content = lines.slice(contentStart + 1).join('\n');
+                }
+
+                return result;
+            }
+        }
+
+        // ============================================
+        //  INIT STORAGE
+        // ============================================
+        const storage = new TelegramStorage();
+
+        // ============================================
+        //  UI HELPERS
+        // ============================================
+        function addMessage(type, content, metadata = {}) {
+            const area = document.getElementById('chatArea');
+            const messageId = ++state.messageCounter;
+            
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.dataset.messageId = messageId;
+            div.dataset.telegramId = metadata.telegramId || '';
+
+            let formattedContent = content;
+            if (type === 'ai' || type === 'user') {
+                formattedContent = formatText(content);
+            }
+
+            let html = `<div class="message-content">${formattedContent}</div>`;
+
+            if (metadata.files && metadata.files.length > 0) {
+                for (const file of metadata.files) {
+                    html += renderFileDisplay(file);
                 }
             }
 
-            await refreshData();
-            updateStatus('Ready');
-        } catch (error) {
-            addSystemMessage(`❌ Error uploading files: ${error.message}`);
-            updateStatus('Error');
-        } finally {
-            showTyping(false);
-            document.getElementById('fileInput').value = '';
+            if (metadata.timestamp) {
+                html += `<div class="timestamp">${metadata.timestamp}</div>`;
+            }
+
+            div.innerHTML = html;
+            
+            setupSwipeHandlers(div);
+            
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+            
+            state.messages.push({ id: messageId, type, content, metadata });
+            return div;
         }
-    }
 
-    async function downloadFile(filename) {
-        addSystemMessage(`⏳ Searching for "${filename}"...`);
-        updateStatus('Downloading...');
+        function renderFileDisplay(file) {
+            const isText = file.isText !== undefined ? file.isText : storage.isTextFile(file.filename);
+            const icon = isText ? '📄' : '📎';
+            const typeLabel = isText ? 'Text file' : 'Binary file';
+            const badgeClass = isText ? 'text' : 'binary';
+            const badgeText = isText ? '📝 AI can read' : '🔒 AI cannot read';
+            
+            let previewHtml = '';
+            if (isText && file.content && file.content.length > 0) {
+                const preview = file.content.substring(0, 300) + (file.content.length > 300 ? '...' : '');
+                previewHtml = `<div class="file-content-preview">${escapeHtml(preview)}</div>`;
+            }
 
-        try {
-            const files = await storage.getFiles();
-            let found = false;
+            return `
+                <div class="file-display" data-filename="${file.filename}">
+                    <div class="file-header">
+                        <span class="file-icon">${icon}</span>
+                        <div class="file-info">
+                            <div class="file-name">${escapeHtml(file.filename)}</div>
+                            <div class="file-meta">
+                                <span>${typeLabel}</span>
+                                <span>• ${formatFileSize(file.size || 0)}</span>
+                                <span class="file-badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${previewHtml}
+                    <div class="file-actions">
+                        <button class="download" onclick="downloadFile('${escapeHtml(file.filename)}')">
+                            ⬇️ Download
+                        </button>
+                        <button class="delete" onclick="deleteFilePermanent('${escapeHtml(file.filename)}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
-            for (const msg of files) {
-                const text = msg.message?.text || '';
-                if (text.includes(filename)) {
-                    const fileData = storage.parseFileMessage(text);
-                    fileData.messageId = msg.message.message_id;
+        function formatText(text) {
+            let html = text;
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            html = html.replace(/\|(.+)\|/g, (match) => {
+                const cells = match.split('|').filter(c => c.trim());
+                return `<table><tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr></table>`;
+            });
+            html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*?<\/li>)/gs, (match) => {
+                return `<ul>${match}</ul>`;
+            });
+            html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        }
+
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.textContent = text;
+            document.getElementById('chatArea').appendChild(div);
+            document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+        }
+
+        function showTyping(show) {
+            const indicator = document.getElementById('typingIndicator');
+            if (show) {
+                indicator.classList.add('show');
+                document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        function updateStatus(text, isOnline = true) {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            if (isOnline) {
+                dot.className = 'status-dot';
+            } else {
+                dot.className = 'status-dot offline';
+            }
+        }
+
+        // ============================================
+        //  SWIPE HANDLERS
+        // ============================================
+        function setupSwipeHandlers(element) {
+            let startX = 0, startY = 0;
+            let isSwiping = false;
+
+            element.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isSwiping = false;
+                element.style.transition = 'none';
+            }, { passive: true });
+
+            element.addEventListener('touchmove', (e) => {
+                const deltaX = e.touches[0].clientX - startX;
+                const deltaY = e.touches[0].clientY - startY;
+                
+                if (Math.abs(deltaY) > 20) return;
+                if (Math.abs(deltaX) < 10) return;
+                
+                isSwiping = true;
+                e.preventDefault();
+
+                const progress = Math.min(Math.abs(deltaX) / 100, 1);
+                element.style.transform = `translateX(${deltaX}px)`;
+                element.style.opacity = 1 - progress * 0.4;
+                
+                if (deltaX < -30) {
+                    element.style.borderLeft = `3px solid #f85149`;
+                } else if (deltaX > 30) {
+                    element.style.borderRight = `3px solid #f0883e`;
+                } else {
+                    element.style.border = '';
+                }
+            }, { passive: false });
+
+            element.addEventListener('touchend', (e) => {
+                const deltaX = e.changedTouches[0].clientX - startX;
+                element.style.transition = 'all 0.25s ease';
+                
+                if (!isSwiping) return;
+
+                if (deltaX < -60) {
+                    deleteMessageLocal(element);
+                } else if (deltaX > 60) {
+                    deleteMessagePermanent(element);
+                } else {
+                    element.style.transform = '';
+                    element.style.opacity = '';
+                    element.style.border = '';
+                }
+            }, { passive: true });
+
+            let mouseDown = false;
+            let mouseStartX = 0;
+
+            element.addEventListener('mousedown', (e) => {
+                if (e.button === 0) {
+                    mouseDown = true;
+                    mouseStartX = e.clientX;
+                    element.style.transition = 'none';
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!mouseDown) return;
+                const deltaX = e.clientX - mouseStartX;
+                if (Math.abs(deltaX) > 10) {
+                    element.style.transform = `translateX(${deltaX}px)`;
+                    element.style.opacity = 1 - Math.min(Math.abs(deltaX) / 100, 0.4);
+                }
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!mouseDown) return;
+                mouseDown = false;
+                element.style.transition = 'all 0.25s ease';
+                const deltaX = e.clientX - mouseStartX;
+                
+                if (deltaX < -60) {
+                    deleteMessageLocal(element);
+                } else if (deltaX > 60) {
+                    deleteMessagePermanent(element);
+                } else {
+                    element.style.transform = '';
+                    element.style.opacity = '';
+                }
+            });
+        }
+
+        // ============================================
+        //  DELETE FUNCTIONS
+        // ============================================
+        function deleteMessageLocal(element) {
+            element.classList.add('swipe-left');
+            setTimeout(() => {
+                element.remove();
+                const id = parseInt(element.dataset.messageId);
+                state.messages = state.messages.filter(m => m.id !== id);
+            }, 350);
+        }
+
+        async function deleteMessagePermanent(element) {
+            const telegramId = element.dataset.telegramId;
+            if (telegramId) {
+                await storage.deleteMessage(telegramId);
+                addSystemMessage('🗑️ Message deleted from Telegram permanently');
+            }
+            element.classList.add('swipe-right');
+            setTimeout(() => {
+                element.remove();
+                const id = parseInt(element.dataset.messageId);
+                state.messages = state.messages.filter(m => m.id !== id);
+            }, 350);
+            await refreshData();
+        }
+
+        // ============================================
+        //  FILE FUNCTIONS
+        // ============================================
+        async function handleFiles(files) {
+            const fileArray = Array.from(files);
+            if (fileArray.length === 0) return;
+
+            updateStatus(`Uploading ${fileArray.length} file(s)...`);
+            showTyping(true);
+
+            try {
+                for (const file of fileArray) {
+                    const isText = storage.isTextFile(file.name);
+                    let content = file;
+
+                    if (isText) {
+                        content = await file.text();
+                    }
+
+                    const messageId = await storage.storeFile(file, content);
                     
-                    if (fileData.content) {
-                        if (fileData.isText) {
-                            const blob = new Blob([fileData.content], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = filename;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                            addSystemMessage(`✅ Downloaded "${filename}"`);
-                        } else {
-                            try {
-                                const binary = atob(fileData.content);
-                                const byteArray = new Uint8Array(binary.length);
-                                for (let i = 0; i < binary.length; i++) {
-                                    byteArray[i] = binary.charCodeAt(i);
-                                }
-                                const blob = new Blob([byteArray]);
+                    const fileData = {
+                        filename: file.name,
+                        size: file.size,
+                        isText: isText,
+                        content: isText ? content : null,
+                        messageId: messageId
+                    };
+
+                    addMessage('system', `📁 Uploaded file:`, {
+                        files: [fileData],
+                        telegramId: messageId,
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+
+                    if (isText && content.length > 0) {
+                        await sendMessageToAI(`I uploaded a text file named "${file.name}". Here's its content:\n\n${content}\n\nPlease remember this file and its content.`);
+                    }
+                }
+
+                await refreshData();
+                updateStatus('Ready');
+            } catch (error) {
+                addSystemMessage(`❌ Error uploading files: ${error.message}`);
+                updateStatus('Error');
+            } finally {
+                showTyping(false);
+                document.getElementById('fileInput').value = '';
+            }
+        }
+
+        async function downloadFile(filename) {
+            addSystemMessage(`⏳ Searching for "${filename}"...`);
+            updateStatus('Downloading...');
+
+            try {
+                const files = await storage.getFiles();
+                let found = false;
+
+                for (const msg of files) {
+                    const text = msg.message?.text || '';
+                    if (text.includes(filename)) {
+                        const fileData = storage.parseFileMessage(text);
+                        fileData.messageId = msg.message.message_id;
+                        
+                        if (fileData.content) {
+                            if (fileData.isText) {
+                                const blob = new Blob([fileData.content], { type: 'text/plain' });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
                                 a.href = url;
@@ -1442,433 +1450,509 @@
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
                                 addSystemMessage(`✅ Downloaded "${filename}"`);
-                            } catch (e) {
-                                addSystemMessage(`❌ Could not download "${filename}"`);
+                            } else {
+                                try {
+                                    const binary = atob(fileData.content);
+                                    const byteArray = new Uint8Array(binary.length);
+                                    for (let i = 0; i < binary.length; i++) {
+                                        byteArray[i] = binary.charCodeAt(i);
+                                    }
+                                    const blob = new Blob([byteArray]);
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(url);
+                                    addSystemMessage(`✅ Downloaded "${filename}"`);
+                                } catch (e) {
+                                    addSystemMessage(`❌ Could not download "${filename}"`);
+                                }
                             }
+                            found = true;
+                            break;
                         }
-                        found = true;
-                        break;
                     }
                 }
-            }
 
-            if (!found) {
-                addSystemMessage(`❌ File "${filename}" not found`);
-            }
-        } catch (error) {
-            addSystemMessage(`❌ Error downloading: ${error.message}`);
-        } finally {
-            updateStatus('Ready');
-        }
-    }
-
-    async function deleteFilePermanent(filename) {
-        if (!confirm(`Delete "${filename}" permanently?`)) return;
-
-        try {
-            const files = await storage.getFiles();
-            let deleted = false;
-
-            for (const msg of files) {
-                const text = msg.message?.text || '';
-                if (text.includes(filename)) {
-                    await storage.deleteMessage(msg.message.message_id);
-                    deleted = true;
+                if (!found) {
+                    addSystemMessage(`❌ File "${filename}" not found`);
                 }
+            } catch (error) {
+                addSystemMessage(`❌ Error downloading: ${error.message}`);
+            } finally {
+                updateStatus('Ready');
             }
-
-            if (deleted) {
-                addSystemMessage(`🗑️ Deleted "${filename}" from storage`);
-                await refreshData();
-            } else {
-                addSystemMessage(`❌ File "${filename}" not found`);
-            }
-        } catch (error) {
-            addSystemMessage(`❌ Error deleting: ${error.message}`);
         }
-    }
 
-    // ============================================
-    //  AI FUNCTIONS (FIXED - with Puter check)
-    // ============================================
-    async function sendMessageToAI(message) {
-        if (state.isProcessing) return;
-        
-        // Check if Puter is ready
-        if (typeof puter === 'undefined' || !puter.ai) {
-            addSystemMessage('⏳ AI is loading... Please wait a moment.');
-            return;
-        }
-        
-        state.isProcessing = true;
-        document.getElementById('sendBtn').disabled = true;
+        async function deleteFilePermanent(filename) {
+            if (!confirm(`Delete "${filename}" permanently?`)) return;
 
-        showTyping(true);
-        updateStatus('AI thinking...');
+            try {
+                const files = await storage.getFiles();
+                let deleted = false;
 
-        try {
-            const context = await getContext();
-            const fullPrompt = context + '\n\nUser: ' + message;
-            
-            const response = await puter.ai.chat(fullPrompt, {
-                model: 'gpt-4o-mini',
-                temperature: 0.7
-            });
-
-            await storage.storeMemory(message, response);
-
-            addMessage('ai', response, {
-                timestamp: new Date().toLocaleTimeString()
-            });
-
-            await handleFileRequest(message, response);
-
-        } catch (error) {
-            console.error('AI Error:', error);
-            if (error.message && error.message.toLowerCase().includes('login')) {
-                addSystemMessage('🔐 Please log in to use the AI. Check the popup window.');
-                updateStatus('Not logged in');
-            } else {
-                addSystemMessage(`❌ Error: ${error.message || 'AI not available'}`);
-                updateStatus('Error');
-            }
-        } finally {
-            state.isProcessing = false;
-            document.getElementById('sendBtn').disabled = false;
-            showTyping(false);
-            updateStatus('Ready');
-            document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
-        }
-    }
-
-    async function getContext() {
-        try {
-            const memories = await storage.getMemories();
-            const recentMemories = memories.slice(-10);
-            let context = 'You are a personal AI assistant with perfect memory. ';
-            context += 'You remember all previous conversations and can learn from them.\n\n';
-            context += 'Previous conversations:\n';
-
-            for (const mem of recentMemories) {
-                const text = mem.message?.text || '';
-                const encrypted = text.split('\n')[1] || '';
-                if (encrypted) {
-                    try {
-                        const decrypted = await storage.decrypt(encrypted);
-                        const data = JSON.parse(decrypted);
-                        context += `User: ${data.message}\nAI: ${data.response}\n`;
-                    } catch (e) {
-                        // Skip if can't decrypt
+                for (const msg of files) {
+                    const text = msg.message?.text || '';
+                    if (text.includes(filename)) {
+                        await storage.deleteMessage(msg.message.message_id);
+                        deleted = true;
                     }
                 }
-            }
 
-            return context;
-        } catch (error) {
-            console.error('Context error:', error);
-            return 'You are a personal AI assistant with perfect memory.';
-        }
-    }
-
-    async function handleFileRequest(message, response) {
-        const filePatterns = [
-            /file/i, /document/i, /spreadsheet/i, /pdf/i, /image/i,
-            /give me/i, /download/i, /show me/i, /find/i
-        ];
-
-        const hasFileRequest = filePatterns.some(pattern => 
-            pattern.test(message) || pattern.test(response)
-        );
-
-        if (hasFileRequest) {
-            const words = (message + ' ' + response).split(/\s+/);
-            let possibleFilename = null;
-
-            for (const word of words) {
-                if (word.includes('.') && !word.includes('http') && !word.includes('https')) {
-                    possibleFilename = word;
-                    break;
+                if (deleted) {
+                    addSystemMessage(`🗑️ Deleted "${filename}" from storage`);
+                    await refreshData();
+                } else {
+                    addSystemMessage(`❌ File "${filename}" not found`);
                 }
-            }
-
-            if (possibleFilename) {
-                await downloadFile(possibleFilename);
-            } else {
-                await listFiles();
+            } catch (error) {
+                addSystemMessage(`❌ Error deleting: ${error.message}`);
             }
         }
-    }
 
-    // ============================================
-    //  LIST FILES
-    // ============================================
-    async function listFiles() {
-        try {
-            const files = await storage.getFiles();
-            if (files.length === 0) {
-                addSystemMessage('📭 No files found in storage.');
+        // ============================================
+        //  AI FUNCTIONS - WITH LOGIN BUTTON
+        // ============================================
+        
+        // Login function - called by the Login button
+        async function loginToPuter() {
+            if (!puterReady) {
+                addSystemMessage('⏳ Puter.js is still loading...');
                 return;
             }
 
-            const fileList = [];
-            for (const msg of files) {
-                const text = msg.message?.text || '';
-                const fileData = storage.parseFileMessage(text);
-                if (fileData.filename) {
-                    fileList.push(fileData);
-                }
+            if (state.isLoggedIn) {
+                addSystemMessage('✅ Already logged in!');
+                return;
             }
 
-            if (fileList.length > 0) {
-                let message = `📁 Found ${fileList.length} file(s):\n\n`;
-                for (const file of fileList) {
-                    const type = file.isText ? '📄 Text' : '📎 Binary';
-                    message += `• ${file.filename} (${type}, ${formatFileSize(file.size)})\n`;
-                }
-                addMessage('ai', message, {
+            addSystemMessage('🔐 Attempting to login to AI...');
+            updateStatus('Logging in...');
+            document.getElementById('loginBtn').style.display = 'none';
+
+            try {
+                // This will trigger the Puter.js login popup
+                const response = await puter.ai.chat('Hello, I am logging in.', { 
+                    model: 'gpt-4o-mini' 
+                });
+                
+                state.isLoggedIn = true;
+                addSystemMessage('✅ Successfully logged in to AI!');
+                updateStatus('Ready');
+                document.getElementById('loginBtn').style.display = 'none';
+                
+                // Show welcome message from AI
+                addMessage('ai', response || 'Hello! I\'m your AI assistant with unlimited memory. How can I help you today?', {
                     timestamp: new Date().toLocaleTimeString()
                 });
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                if (error.message && error.message.toLowerCase().includes('login')) {
+                    addSystemMessage('🔐 Login popup should appear. Please check for popup blockers.');
+                    document.getElementById('loginBtn').style.display = 'block';
+                } else {
+                    addSystemMessage(`❌ Login failed: ${error.message}`);
+                    document.getElementById('loginBtn').style.display = 'block';
+                }
+                updateStatus('Login failed', false);
             }
-        } catch (error) {
-            addSystemMessage(`❌ Error listing files: ${error.message}`);
-        }
-    }
-
-    // ============================================
-    //  SEND MESSAGE
-    // ============================================
-    async function sendMessage() {
-        const input = document.getElementById('userInput');
-        const text = input.value.trim();
-        
-        if (!text || state.isProcessing) return;
-        
-        if (text.toLowerCase().includes('list files') || text.toLowerCase().includes('show files')) {
-            addMessage('user', text, {
-                timestamp: new Date().toLocaleTimeString()
-            });
-            input.value = '';
-            input.style.height = 'auto';
-            await listFiles();
-            return;
         }
 
-        if (text.toLowerCase().includes('download') || text.toLowerCase().includes('give me')) {
-            const match = text.match(/(?:download|give me|get)\s+(?:the\s+file\s+)?['"]?([^'"\s]+)['"]?/i);
-            if (match && match[1]) {
+        async function sendMessageToAI(message) {
+            if (state.isProcessing) return;
+            
+            // Check if Puter is ready
+            if (!puterReady) {
+                addSystemMessage('⏳ AI is loading... Please wait.');
+                return;
+            }
+            
+            // Check if logged in
+            if (!state.isLoggedIn) {
+                addSystemMessage('🔐 Please login first. Click the "Login" button in the header.');
+                document.getElementById('loginBtn').style.display = 'block';
+                updateStatus('Login required', false);
+                return;
+            }
+            
+            state.isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            showTyping(true);
+            updateStatus('AI thinking...');
+
+            try {
+                const context = await getContext();
+                const fullPrompt = context + '\n\nUser: ' + message;
+                
+                const response = await puter.ai.chat(fullPrompt, {
+                    model: 'gpt-4o-mini',
+                    temperature: 0.7
+                });
+
+                await storage.storeMemory(message, response);
+
+                addMessage('ai', response, {
+                    timestamp: new Date().toLocaleTimeString()
+                });
+
+                await handleFileRequest(message, response);
+
+            } catch (error) {
+                console.error('AI Error:', error);
+                if (error.message && error.message.toLowerCase().includes('login')) {
+                    state.isLoggedIn = false;
+                    addSystemMessage('🔐 Session expired. Please login again.');
+                    document.getElementById('loginBtn').style.display = 'block';
+                    updateStatus('Not logged in', false);
+                } else {
+                    addSystemMessage(`❌ Error: ${error.message || 'AI not available'}`);
+                    updateStatus('Error', false);
+                }
+            } finally {
+                state.isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                showTyping(false);
+                updateStatus('Ready');
+                document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+            }
+        }
+
+        async function getContext() {
+            try {
+                const memories = await storage.getMemories();
+                const recentMemories = memories.slice(-10);
+                let context = 'You are a personal AI assistant with perfect memory. ';
+                context += 'You remember all previous conversations and can learn from them.\n\n';
+                context += 'Previous conversations:\n';
+
+                for (const mem of recentMemories) {
+                    const text = mem.message?.text || '';
+                    const encrypted = text.split('\n')[1] || '';
+                    if (encrypted) {
+                        try {
+                            const decrypted = await storage.decrypt(encrypted);
+                            const data = JSON.parse(decrypted);
+                            context += `User: ${data.message}\nAI: ${data.response}\n`;
+                        } catch (e) {
+                            // Skip if can't decrypt
+                        }
+                    }
+                }
+
+                return context;
+            } catch (error) {
+                console.error('Context error:', error);
+                return 'You are a personal AI assistant with perfect memory.';
+            }
+        }
+
+        async function handleFileRequest(message, response) {
+            const filePatterns = [
+                /file/i, /document/i, /spreadsheet/i, /pdf/i, /image/i,
+                /give me/i, /download/i, /show me/i, /find/i
+            ];
+
+            const hasFileRequest = filePatterns.some(pattern => 
+                pattern.test(message) || pattern.test(response)
+            );
+
+            if (hasFileRequest) {
+                const words = (message + ' ' + response).split(/\s+/);
+                let possibleFilename = null;
+
+                for (const word of words) {
+                    if (word.includes('.') && !word.includes('http') && !word.includes('https')) {
+                        possibleFilename = word;
+                        break;
+                    }
+                }
+
+                if (possibleFilename) {
+                    await downloadFile(possibleFilename);
+                } else {
+                    await listFiles();
+                }
+            }
+        }
+
+        // ============================================
+        //  LIST FILES
+        // ============================================
+        async function listFiles() {
+            try {
+                const files = await storage.getFiles();
+                if (files.length === 0) {
+                    addSystemMessage('📭 No files found in storage.');
+                    return;
+                }
+
+                const fileList = [];
+                for (const msg of files) {
+                    const text = msg.message?.text || '';
+                    const fileData = storage.parseFileMessage(text);
+                    if (fileData.filename) {
+                        fileList.push(fileData);
+                    }
+                }
+
+                if (fileList.length > 0) {
+                    let message = `📁 Found ${fileList.length} file(s):\n\n`;
+                    for (const file of fileList) {
+                        const type = file.isText ? '📄 Text' : '📎 Binary';
+                        message += `• ${file.filename} (${type}, ${formatFileSize(file.size)})\n`;
+                    }
+                    addMessage('ai', message, {
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                }
+            } catch (error) {
+                addSystemMessage(`❌ Error listing files: ${error.message}`);
+            }
+        }
+
+        // ============================================
+        //  SEND MESSAGE
+        // ============================================
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            
+            if (!text || state.isProcessing) return;
+            
+            if (text.toLowerCase().includes('list files') || text.toLowerCase().includes('show files')) {
                 addMessage('user', text, {
                     timestamp: new Date().toLocaleTimeString()
                 });
                 input.value = '';
                 input.style.height = 'auto';
-                await downloadFile(match[1]);
+                await listFiles();
                 return;
             }
-        }
 
-        addMessage('user', text, {
-            timestamp: new Date().toLocaleTimeString()
-        });
-        
-        input.value = '';
-        input.style.height = 'auto';
-        
-        await sendMessageToAI(text);
-    }
-
-    // ============================================
-    //  INPUT HANDLING
-    // ============================================
-    function handleInputKeydown(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    }
-
-    document.getElementById('userInput').addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    });
-
-    // ============================================
-    //  REFRESH DATA
-    // ============================================
-    async function refreshData() {
-        updateStatus('Refreshing...');
-        document.getElementById('refreshBtn').style.animation = 'spin 1s linear';
-        
-        try {
-            const files = await storage.getFiles();
-            const memories = await storage.getMemories();
-            
-            document.getElementById('fileCount').textContent = `${files.length} files`;
-            document.getElementById('memoryCount').textContent = `${memories.length} memories`;
-            
-            state.files = files;
-            updateStatus('Ready');
-        } catch (error) {
-            addSystemMessage(`❌ Error refreshing: ${error.message}`);
-            updateStatus('Error');
-        } finally {
-            setTimeout(() => {
-                document.getElementById('refreshBtn').style.animation = '';
-            }, 1000);
-        }
-    }
-
-    // ============================================
-    //  CLEAR CHAT
-    // ============================================
-    function clearChat() {
-        if (!confirm('Clear chat messages? (Your data is still safe)')) return;
-        document.getElementById('chatArea').innerHTML = '';
-        state.messages = [];
-        addSystemMessage('🧹 Chat cleared');
-    }
-
-    // ============================================
-    //  THEME TOGGLE
-    // ============================================
-    function toggleTheme() {
-        const isDark = document.body.style.background !== '#f0f6fc';
-        document.body.style.background = isDark ? '#f0f6fc' : '#0d1117';
-        document.body.style.color = isDark ? '#24292f' : '#e6edf3';
-        document.querySelector('.app').style.background = isDark ? '#f6f8fa' : '#0d1117';
-        document.querySelector('.header').style.background = isDark ? 'rgba(246,248,250,0.98)' : 'rgba(22,27,34,0.98)';
-        document.querySelector('.input-area').style.background = isDark ? 'rgba(246,248,250,0.98)' : 'rgba(22,27,34,0.98)';
-        document.querySelector('.input-wrapper').style.background = isDark ? '#f0f0f0' : '#161b22';
-        document.querySelector('.input-wrapper textarea').style.color = isDark ? '#24292f' : '#e6edf3';
-    }
-
-    // ============================================
-    //  DRAG AND DROP
-    // ============================================
-    document.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        document.getElementById('dropZone').classList.add('active');
-    });
-
-    document.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        document.getElementById('dropZone').classList.remove('active');
-    });
-
-    document.addEventListener('drop', (e) => {
-        e.preventDefault();
-        document.getElementById('dropZone').classList.remove('active');
-        if (e.dataTransfer.files.length) {
-            handleFiles(e.dataTransfer.files);
-        }
-    });
-
-    document.getElementById('dropZone').addEventListener('click', () => {
-        document.getElementById('fileInput').click();
-        document.getElementById('dropZone').classList.remove('active');
-    });
-
-    // ============================================
-    //  PWA INSTALLATION
-    // ============================================
-    let deferredPrompt;
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        const installBtn = document.getElementById('installBtn');
-        installBtn.classList.add('show');
-        installBtn.addEventListener('click', async () => {
-            installBtn.classList.remove('show');
-            deferredPrompt.prompt();
-            const result = await deferredPrompt.userChoice;
-            if (result.outcome === 'accepted') {
-                console.log('PWA installed');
-            }
-            deferredPrompt = null;
-        });
-    });
-    
-    window.addEventListener('appinstalled', () => {
-        document.getElementById('installBtn')?.classList.remove('show');
-    });
-
-    // ============================================
-    //  ADD SPIN ANIMATION
-    // ============================================
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(styleEl);
-
-    // ============================================
-    //  INIT
-    // ============================================
-    async function init() {
-        console.log('🧠 AI Memory Bot');
-        console.log(`👤 User ID: ${getUserId()}`);
-        console.log(`🔄 Session: ${state.sessionId}`);
-        
-        addSystemMessage('👋 Welcome to your AI Memory Bot!');
-        addSystemMessage('💾 Your data is stored securely in Telegram.');
-        addSystemMessage('📤 You can upload, download, and manage files.');
-        addSystemMessage('🧠 The AI learns from every conversation.');
-        
-        // Wait for Puter.js to load
-        try {
-            await waitForPuter();
-            state.puterLoaded = true;
-            
-            // Test AI connection
-            try {
-                await puter.ai.chat('Hello', { model: 'gpt-4o-mini' });
-                state.isLoggedIn = true;
-                addSystemMessage('✅ AI is ready!');
-                updateStatus('Ready');
-            } catch (error) {
-                if (error.message && error.message.toLowerCase().includes('login')) {
-                    addSystemMessage('🔐 Please log in to use the AI. A popup should appear.');
-                    updateStatus('Login required');
-                } else {
-                    addSystemMessage('⚠️ AI error: ' + error.message);
-                    updateStatus('Error');
+            if (text.toLowerCase().includes('download') || text.toLowerCase().includes('give me')) {
+                const match = text.match(/(?:download|give me|get)\s+(?:the\s+file\s+)?['"]?([^'"\s]+)['"]?/i);
+                if (match && match[1]) {
+                    addMessage('user', text, {
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                    input.value = '';
+                    input.style.height = 'auto';
+                    await downloadFile(match[1]);
+                    return;
                 }
             }
-        } catch (error) {
-            addSystemMessage('⚠️ ' + error.message);
-            addSystemMessage('🔄 Please refresh the page.');
-            updateStatus('Error');
+
+            addMessage('user', text, {
+                timestamp: new Date().toLocaleTimeString()
+            });
+            
+            input.value = '';
+            input.style.height = 'auto';
+            
+            await sendMessageToAI(text);
         }
-        
-        // Load data
-        await refreshData();
-        
-        // Focus input
-        document.getElementById('userInput').focus();
-    }
 
-    // Start the app
-    init();
+        // ============================================
+        //  INPUT HANDLING
+        // ============================================
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
 
-    // ============================================
-    //  KEYBOARD SHORTCUTS
-    // ============================================
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+        document.getElementById('userInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // ============================================
+        //  REFRESH DATA
+        // ============================================
+        async function refreshData() {
+            updateStatus('Refreshing...');
+            document.getElementById('refreshBtn').style.animation = 'spin 1s linear';
+            
+            try {
+                const files = await storage.getFiles();
+                const memories = await storage.getMemories();
+                
+                document.getElementById('fileCount').textContent = `${files.length} files`;
+                document.getElementById('memoryCount').textContent = `${memories.length} memories`;
+                
+                state.files = files;
+                updateStatus('Ready');
+            } catch (error) {
+                addSystemMessage(`❌ Error refreshing: ${error.message}`);
+                updateStatus('Error', false);
+            } finally {
+                setTimeout(() => {
+                    document.getElementById('refreshBtn').style.animation = '';
+                }, 1000);
+            }
+        }
+
+        // ============================================
+        //  CLEAR CHAT
+        // ============================================
+        function clearChat() {
+            if (!confirm('Clear chat messages? (Your data is still safe)')) return;
+            document.getElementById('chatArea').innerHTML = '';
+            state.messages = [];
+            addSystemMessage('🧹 Chat cleared');
+        }
+
+        // ============================================
+        //  THEME TOGGLE
+        // ============================================
+        function toggleTheme() {
+            const isDark = document.body.style.background !== '#f0f6fc';
+            document.body.style.background = isDark ? '#f0f6fc' : '#0d1117';
+            document.body.style.color = isDark ? '#24292f' : '#e6edf3';
+            document.querySelector('.app').style.background = isDark ? '#f6f8fa' : '#0d1117';
+            document.querySelector('.header').style.background = isDark ? 'rgba(246,248,250,0.98)' : 'rgba(22,27,34,0.98)';
+            document.querySelector('.input-area').style.background = isDark ? 'rgba(246,248,250,0.98)' : 'rgba(22,27,34,0.98)';
+            document.querySelector('.input-wrapper').style.background = isDark ? '#f0f0f0' : '#161b22';
+            document.querySelector('.input-wrapper textarea').style.color = isDark ? '#24292f' : '#e6edf3';
+        }
+
+        // ============================================
+        //  DRAG AND DROP
+        // ============================================
+        document.addEventListener('dragover', (e) => {
             e.preventDefault();
+            document.getElementById('dropZone').classList.add('active');
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('active');
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('active');
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        document.getElementById('dropZone').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+            document.getElementById('dropZone').classList.remove('active');
+        });
+
+        // ============================================
+        //  PWA INSTALLATION
+        // ============================================
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            const installBtn = document.getElementById('installBtn');
+            installBtn.classList.add('show');
+            installBtn.addEventListener('click', async () => {
+                installBtn.classList.remove('show');
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                if (result.outcome === 'accepted') {
+                    console.log('PWA installed');
+                }
+                deferredPrompt = null;
+            });
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBtn')?.classList.remove('show');
+        });
+
+        // ============================================
+        //  ADD SPIN ANIMATION
+        // ============================================
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(styleEl);
+
+        // ============================================
+        //  INIT
+        // ============================================
+        async function init() {
+            console.log('🧠 AI Memory Bot');
+            console.log(`👤 User ID: ${getUserId()}`);
+            console.log(`🔄 Session: ${state.sessionId}`);
+            
+            addSystemMessage('👋 Welcome to your AI Memory Bot!');
+            addSystemMessage('💾 Your data is stored securely in Telegram.');
+            addSystemMessage('📤 You can upload, download, and manage files.');
+            addSystemMessage('🧠 The AI learns from every conversation.');
+            
+            // Wait for Puter.js to load
+            try {
+                await waitForPuter();
+                state.puterLoaded = true;
+                
+                // Try to check if already logged in
+                try {
+                    const testResponse = await puter.ai.chat('Hello', { model: 'gpt-4o-mini' });
+                    state.isLoggedIn = true;
+                    addSystemMessage('✅ AI is ready!');
+                    updateStatus('Ready');
+                    document.getElementById('loginBtn').style.display = 'none';
+                } catch (error) {
+                    if (error.message && error.message.toLowerCase().includes('login')) {
+                        addSystemMessage('🔐 Please login using the "Login" button in the header.');
+                        document.getElementById('loginBtn').style.display = 'block';
+                        updateStatus('Login required', false);
+                    } else {
+                        addSystemMessage('⚠️ AI error: ' + error.message);
+                        updateStatus('Error', false);
+                    }
+                }
+            } catch (error) {
+                addSystemMessage('⚠️ ' + error.message);
+                addSystemMessage('🔄 Please refresh the page.');
+                updateStatus('Error', false);
+            }
+            
+            // Load data
+            await refreshData();
+            
+            // Focus input
             document.getElementById('userInput').focus();
         }
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            refreshData();
-        }
-    });
 
-    console.log('🚀 Shortcuts: Ctrl+L = focus input, Ctrl+R = refresh');
-</script>
+        // Start the app
+        init();
+
+        // ============================================
+        //  KEYBOARD SHORTCUTS
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                e.preventDefault();
+                document.getElementById('userInput').focus();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+        });
+
+        console.log('🚀 Shortcuts: Ctrl+L = focus input, Ctrl+R = refresh');
+        console.log('🔐 Click the "Login" button in the header to login to AI');
+    </script>
 </body>
 </html>
