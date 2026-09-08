@@ -1,7 +1,7 @@
 {
   "name": "AI Memory Bot",
   "short_name": "Memory Bot",
-  "description": "AI chatbot with unlimited Telegram storage",
+  "description": "Personal AI with unlimited memory storage",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -29,9 +29,9 @@
       "description": "Start a new conversation"
     },
     {
-      "name": "Upload File",
+      "name": "Upload Files",
       "url": "/?action=upload",
-      "description": "Upload a file to storage"
+      "description": "Upload files to storage"
     }
   ],
   "display_override": ["standalone", "minimal-ui"]
